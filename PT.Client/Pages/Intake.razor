@@ -1,0 +1,133 @@
+@page "/intake"
+@using PT.Shared.Models.Intake
+@using PT.Client.Services
+@inject AppState State
+@inject PTApiClient Api
+@inject NavigationManager Nav
+
+<div class="container mt-4 pb-5">
+    <h2 class="mb-4 fw-bold">Client Intake</h2>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-primary text-white">Basic Profile</div>
+        <div class="card-body bg-light">
+            <div class="mb-3">
+                <label class="form-label text-muted fw-bold">Name</label>
+                <input @bind="State.CurrentProfile.Name" class="form-control form-control-lg shadow-sm" placeholder="Client Name" />
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted fw-bold">Age</label>
+                    <input type="number" @bind="State.CurrentProfile.Age" class="form-control form-control-lg shadow-sm" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label text-muted fw-bold">Budget ($)</label>
+                    <input type="number" @bind="State.CurrentProfile.Budget" class="form-control form-control-lg shadow-sm" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-secondary text-white">Inbody Metrics</div>
+        <div class="card-body bg-light">
+            <div class="row">
+                <div class="col-6 col-md-3 mb-3">
+                    <label class="form-label text-muted fw-bold">Weight (kg)</label>
+                    <input type="number" step="0.1" @bind="State.CurrentProfile.Metrics.WeightKg" class="form-control form-control-lg shadow-sm" />
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <label class="form-label text-muted fw-bold">Height (cm)</label>
+                    <input type="number" step="0.1" @bind="State.CurrentProfile.Metrics.HeightCm" class="form-control form-control-lg shadow-sm" />
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <label class="form-label text-muted fw-bold">Body Fat (%)</label>
+                    <input type="number" step="0.1" @bind="State.CurrentProfile.Metrics.BodyFatPercentage" class="form-control form-control-lg shadow-sm" />
+                </div>
+                <div class="col-6 col-md-3 mb-3">
+                    <label class="form-label text-muted fw-bold">Muscle (kg)</label>
+                    <input type="number" step="0.1" @bind="State.CurrentProfile.Metrics.SkeletalMuscleKg" class="form-control form-control-lg shadow-sm" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-danger text-white">Medical Constraints</div>
+        <div class="card-body bg-light">
+            <div class="form-check form-switch mb-3 fs-5">
+                <input class="form-check-input shadow-sm" type="checkbox" id="jointIssues" @bind="State.CurrentProfile.Medical.HasJointIssues">
+                <label class="form-check-label fw-bold" for="jointIssues">Has Joint Issues</label>
+            </div>
+            @if (State.CurrentProfile.Medical.HasJointIssues)
+            {
+                <div class="mb-3">
+                    <input @bind="State.CurrentProfile.Medical.JointIssueDetails" class="form-control shadow-sm" placeholder="Describe joint issues (e.g., bad left knee)" />
+                </div>
+            }
+
+            <div class="form-check form-switch mb-3 fs-5">
+                <input class="form-check-input shadow-sm" type="checkbox" id="cardioIssues" @bind="State.CurrentProfile.Medical.HasCardioIssues">
+                <label class="form-check-label fw-bold" for="cardioIssues">Has Cardio/Heart Issues</label>
+            </div>
+            @if (State.CurrentProfile.Medical.HasCardioIssues)
+            {
+                <div class="mb-3">
+                    <input @bind="State.CurrentProfile.Medical.CardioIssueDetails" class="form-control shadow-sm" placeholder="Describe cardio issues (e.g., high blood pressure)" />
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="d-grid gap-2 mb-5">
+        <button class="btn btn-success btn-lg p-3 shadow-lg rounded-pill fw-bold text-uppercase" @onclick="GeneratePlan" disabled="@_isGenerating">
+            @if (_isGenerating)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>Generating AI Plan...</span>
+            }
+            else
+            {
+                <span>Generate AI Plan</span>
+            }
+        </button>
+    </div>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger shadow-sm rounded">@_errorMessage</div>
+    }
+</div>
+
+@code {
+    private bool _isGenerating = false;
+    private string _errorMessage = string.Empty;
+
+    private async Task GeneratePlan()
+    {
+        _isGenerating = true;
+        _errorMessage = string.Empty;
+        State.NotifyStateChanged();
+
+        try
+        {
+            var plan = await Api.GeneratePlanAsync(State.CurrentProfile);
+            if (plan != null)
+            {
+                State.CurrentPlan = plan;
+                // Save intake immediately for data persistence
+                await Api.SaveIntakeAsync(State.CurrentProfile);
+                Nav.NavigateTo("/editor");
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Failed to generate plan: {ex.Message}";
+        }
+        finally
+        {
+            _isGenerating = false;
+            State.NotifyStateChanged();
+        }
+    }
+}

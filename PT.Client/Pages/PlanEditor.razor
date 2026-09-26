@@ -1,0 +1,151 @@
+@page "/editor"
+@using PT.Shared.Models.AutoGen
+@using PT.Client.Services
+@inject AppState State
+@inject NavigationManager Nav
+
+<div class="container mt-4 pb-5">
+    @if (State.CurrentPlan == null)
+    {
+        <div class="alert alert-warning shadow-sm rounded">
+            No plan has been generated yet. <a href="intake" class="alert-link">Go to Intake</a>.
+        </div>
+    }
+    else
+    {
+        <h2 class="mb-4 fw-bold text-center">Interactive Plan Editor</h2>
+
+        <!-- Workout Plan Section -->
+        <div class="card mb-5 shadow border-0">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center rounded-top">
+                <h4 class="mb-0 fw-bold">Workout Plan</h4>
+            </div>
+            <div class="card-body p-0 bg-light rounded-bottom">
+                @foreach (var day in State.CurrentPlan.Workout.Days)
+                {
+                    <div class="p-4 mb-0">
+                        <h5 class="text-primary border-bottom border-primary pb-2 fw-bold">@day.DayName - <small class="text-muted fw-normal">@day.FocusArea</small></h5>
+                        <ul class="list-group list-group-flush shadow-sm rounded">
+                            @foreach (var ex in day.Exercises)
+                            {
+                                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-3 py-3 border-bottom border-light">
+                                    <div class="fw-bold fs-5 text-dark" style="min-width: 250px;">@ex.Name</div>
+
+                                    <div class="d-flex align-items-center gap-2 bg-light p-2 rounded">
+                                        <span class="badge bg-secondary rounded-pill shadow-sm">Sets</span>
+                                        <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-sm" style="width: 32px; height: 32px;" @onclick="() => AdjustSets(ex, -1)">-</button>
+                                        <span class="fs-5 fw-bold" style="width: 20px; text-align: center;">@ex.Sets</span>
+                                        <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-sm" style="width: 32px; height: 32px;" @onclick="() => AdjustSets(ex, 1)">+</button>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 bg-light p-2 rounded">
+                                        <span class="badge bg-secondary rounded-pill shadow-sm">Reps</span>
+                                        <input type="text" class="form-control form-control-sm text-center fw-bold shadow-sm" @bind="ex.Reps" style="width: 80px;" />
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 bg-light p-2 rounded">
+                                        <span class="badge bg-secondary rounded-pill shadow-sm">Rest</span>
+                                        <input type="text" class="form-control form-control-sm text-center fw-bold shadow-sm" @bind="ex.RestTime" style="width: 80px;" />
+                                    </div>
+
+                                    <button class="btn btn-sm btn-warning shadow-sm fw-bold px-4 rounded-pill" @onclick="() => SwapExercise(ex)">Swap</button>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Nutrition Plan Section -->
+        <div class="card mb-5 shadow border-0">
+            <div class="card-header bg-success text-white rounded-top">
+                <h4 class="mb-0 fw-bold">Nutrition Plan</h4>
+            </div>
+            <div class="card-body bg-light rounded-bottom">
+                <div class="row text-center mb-4">
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="p-3 border border-success rounded shadow-sm bg-white">
+                            <h6 class="text-muted text-uppercase fw-bold">Calories</h6>
+                            <h3 class="text-success mb-0 fw-bold">@State.CurrentPlan.Nutrition.DailyCalories</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="p-3 border border-primary rounded shadow-sm bg-white">
+                            <h6 class="text-muted text-uppercase fw-bold">Protein (g)</h6>
+                            <h3 class="text-primary mb-0 fw-bold">@State.CurrentPlan.Nutrition.ProteinGrams</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="p-3 border border-warning rounded shadow-sm bg-white">
+                            <h6 class="text-muted text-uppercase fw-bold">Carbs (g)</h6>
+                            <h3 class="text-warning mb-0 fw-bold">@State.CurrentPlan.Nutrition.CarbsGrams</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3 mb-3">
+                        <div class="p-3 border border-danger rounded shadow-sm bg-white">
+                            <h6 class="text-muted text-uppercase fw-bold">Fat (g)</h6>
+                            <h3 class="text-danger mb-0 fw-bold">@State.CurrentPlan.Nutrition.FatGrams</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3 px-2">
+                    <h5 class="border-bottom border-success pb-2 text-success fw-bold">Meals</h5>
+                    <div class="row mt-3">
+                    @foreach (var meal in State.CurrentPlan.Nutrition.Meals)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 bg-white border border-success shadow-sm">
+                                <div class="card-body py-3">
+                                    <h5 class="text-success fw-bold mb-3">@meal.Name</h5>
+                                    <ul class="mb-0 ps-3 fs-5">
+                                        @foreach (var item in meal.Items)
+                                        {
+                                            <li class="mb-1 text-dark">@item</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2 mb-5">
+            <button class="btn btn-dark btn-lg p-3 rounded-pill shadow fs-4 fw-bold text-uppercase" @onclick="NavigateToDashboard">Proceed to Deal Dashboard</button>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        State.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        State.OnChange -= StateHasChanged;
+    }
+
+    private void AdjustSets(Exercise ex, int amount)
+    {
+        if (ex.Sets + amount > 0)
+        {
+            ex.Sets += amount;
+        }
+    }
+
+    private void SwapExercise(Exercise ex)
+    {
+        ex.Name = "Alternate Exercise (Swapped)";
+    }
+
+    private void NavigateToDashboard()
+    {
+        Nav.NavigateTo("/dashboard");
+    }
+}

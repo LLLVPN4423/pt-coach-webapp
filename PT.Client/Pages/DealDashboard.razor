@@ -1,0 +1,153 @@
+@page "/dashboard"
+@using PT.Shared.Models.AutoGen
+@using PT.Shared.Models.DealClosing
+@using PT.Client.Services
+@inject AppState State
+@inject PTApiClient Api
+@inject NavigationManager Nav
+
+<div class="container mt-4 pb-5">
+    @if (State.CurrentPlan == null || string.IsNullOrEmpty(State.CurrentProfile.Name))
+    {
+        <div class="alert alert-warning shadow-sm rounded">
+            No plan available. Please start the <a href="intake" class="alert-link">Intake Process</a>.
+        </div>
+    }
+    else
+    {
+        <h1 class="mb-5 text-center fw-bold display-5 text-primary">Executive Summary<br/><small class="text-muted fs-3">for @State.CurrentProfile.Name</small></h1>
+
+        <!-- Inbody Radar/Progress Summary -->
+        <div class="card mb-4 shadow border-0">
+            <div class="card-header bg-info text-white rounded-top">
+                <h4 class="mb-0 fw-bold"><i class="bi bi-person-lines-fill"></i> Current State vs Goals</h4>
+            </div>
+            <div class="card-body bg-light rounded-bottom">
+                <p class="text-dark text-center mb-4 fs-5 border-bottom pb-3">Goal: <strong class="text-info">@State.CurrentProfile.Goals.PrimaryGoal</strong> <br/> Target Physique: <strong class="text-success">@State.CurrentProfile.Goals.TargetPhysique</strong></p>
+
+                <div class="px-md-5 mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-muted">Body Fat: @State.CurrentProfile.Metrics.BodyFatPercentage%</span>
+                        <span class="text-success fw-bold">Target: @(State.CurrentProfile.Metrics.BodyFatPercentage * 0.85m)%</span>
+                    </div>
+                    <div class="progress shadow-sm rounded-pill" style="height: 30px;">
+                        <div class="progress-bar bg-danger fw-bold fs-6" role="progressbar" style="width: @State.CurrentProfile.Metrics.BodyFatPercentage%">Current</div>
+                    </div>
+                </div>
+
+                <div class="px-md-5 mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="fw-bold text-muted">Skeletal Muscle: @State.CurrentProfile.Metrics.SkeletalMuscleKg kg</span>
+                        <span class="text-success fw-bold">Target: @(State.CurrentProfile.Metrics.SkeletalMuscleKg * 1.10m) kg</span>
+                    </div>
+                    <div class="progress shadow-sm rounded-pill" style="height: 30px;">
+                        <div class="progress-bar bg-primary fw-bold fs-6" role="progressbar" style="width: 40%">Current</div>
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated fw-bold fs-6" role="progressbar" style="width: 10%">Expected Gain</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plan Breakdown Summary -->
+        <div class="row mb-5">
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-header bg-dark text-white rounded-top"><h5 class="mb-0 fw-bold">Workout Commitment</h5></div>
+                    <div class="card-body bg-light text-center d-flex flex-column justify-content-center rounded-bottom">
+                        <h1 class="display-1 text-primary fw-bold mb-0">@State.CurrentPlan.Workout.Days.Count</h1>
+                        <h3 class="text-muted text-uppercase mb-4">Days / Week</h3>
+                        <p class="text-dark fs-5 bg-white p-3 rounded shadow-sm border">High-volume, targeted hypertrophy focused on your specific joint constraints.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card h-100 shadow border-0">
+                    <div class="card-header bg-success text-white rounded-top"><h5 class="mb-0 fw-bold">Nutrition Macros</h5></div>
+                    <div class="card-body bg-light rounded-bottom py-4 px-md-4">
+                        <div class="d-flex justify-content-between mb-1 fs-5"><span class="text-muted fw-bold">Protein</span> <strong class="text-primary">@State.CurrentPlan.Nutrition.ProteinGrams g</strong></div>
+                        <div class="progress mb-4 shadow-sm rounded-pill" style="height: 20px;"><div class="progress-bar bg-primary" style="width: 40%"></div></div>
+
+                        <div class="d-flex justify-content-between mb-1 fs-5"><span class="text-muted fw-bold">Carbs</span> <strong class="text-warning">@State.CurrentPlan.Nutrition.CarbsGrams g</strong></div>
+                        <div class="progress mb-4 shadow-sm rounded-pill" style="height: 20px;"><div class="progress-bar bg-warning" style="width: 45%"></div></div>
+
+                        <div class="d-flex justify-content-between mb-1 fs-5"><span class="text-muted fw-bold">Fats</span> <strong class="text-danger">@State.CurrentPlan.Nutrition.FatGrams g</strong></div>
+                        <div class="progress shadow-sm rounded-pill" style="height: 20px;"><div class="progress-bar bg-danger" style="width: 15%"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing / Contract -->
+        <div class="card mb-5 shadow-lg border-0 bg-warning bg-opacity-10">
+            <div class="card-body text-center py-5">
+                <h2 class="fw-bold text-dark text-uppercase mb-4">Commitment & Investment</h2>
+                <div class="bg-white d-inline-block px-5 py-3 rounded-pill shadow-sm border border-warning mb-4">
+                    <h1 class="text-success mb-0 display-4 fw-bold">$@State.CurrentProfile.Budget <small class="text-muted fs-4 fw-normal">/ month</small></h1>
+                </div>
+                <p class="text-dark fs-5 mt-2 fw-bold px-md-5">Includes 24/7 access to app, weekly check-ins, and dynamic plan adjustments.</p>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        @if (!string.IsNullOrEmpty(_successMessage))
+        {
+            <div class="alert alert-success fs-3 text-center shadow-lg rounded p-5 fw-bold">
+                <div class="display-1 mb-3"><i class="oi oi-circle-check"></i></div>
+                @_successMessage
+            </div>
+        }
+        else
+        {
+            <div class="d-grid gap-2 px-md-5">
+                <button class="btn btn-dark btn-lg py-4 fs-2 shadow-lg rounded-pill text-uppercase fw-bold" @onclick="CloseDeal" disabled="@_isClosing">
+                    @if (_isClosing)
+                    {
+                        <span class="spinner-border text-light me-3" style="width: 2rem; height: 2rem;" role="status" aria-hidden="true"></span>
+                        <span> Finalizing Contract...</span>
+                    }
+                    else
+                    {
+                        <span>Sign & Close Deal</span>
+                    }
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="alert alert-danger mt-4 shadow-sm rounded fs-5 text-center">@_errorMessage</div>
+            }
+        }
+    }
+</div>
+
+@code {
+    private bool _isClosing = false;
+    private string _successMessage = string.Empty;
+    private string _errorMessage = string.Empty;
+
+    private async Task CloseDeal()
+    {
+        _isClosing = true;
+        _errorMessage = string.Empty;
+
+        try
+        {
+            var req = new CloseDealRequest
+            {
+                Profile = State.CurrentProfile,
+                Plan = State.CurrentPlan!
+            };
+
+            await Api.CloseDealAsync(req);
+            _successMessage = "DEAL CLOSED! The client contract and full plans have been securely synced to the database.";
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Error closing deal: {ex.Message}";
+        }
+        finally
+        {
+            _isClosing = false;
+        }
+    }
+}
