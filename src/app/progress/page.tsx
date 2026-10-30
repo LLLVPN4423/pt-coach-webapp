@@ -71,7 +71,7 @@ export default function ProgressPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">14 ngày gần đây</h2>
+        <h2 className="section-title">14 ngày gần đây</h2>
         <DayDots
           series={series14.map((s) => {
             const l = logs.find((x) => x.date.slice(0, 10) === s.date);
@@ -92,12 +92,12 @@ export default function ProgressPage() {
       </section>
 
       <section className="card space-y-2">
-        <h2 className="font-semibold">RPE (28 ngày)</h2>
+        <h2 className="section-title">RPE (28 ngày)</h2>
         <Sparkline values={series28.map((s) => s.rpe)} />
       </section>
 
       <section className="card space-y-2">
-        <h2 className="font-semibold">Cân nặng</h2>
+        <h2 className="section-title">Cân nặng</h2>
         <Sparkline values={weights.map((w) => w.weightKg)} />
         {weights.length > 0 && (
           <p className="text-xs text-[var(--muted)]">
@@ -111,7 +111,7 @@ export default function ProgressPage() {
 
       {(plan?.contextNotes?.length || plan?.sexNotes?.length) && (
         <section className="card space-y-2 text-sm text-[var(--muted)]">
-          <h2 className="font-semibold text-[var(--ink)]">Gợi ý gắn plan</h2>
+          <h2 className="section-title">Gợi ý gắn plan</h2>
           <ul className="list-disc space-y-1 pl-5">
             {[...(plan?.sexNotes || []), ...(plan?.contextNotes || [])]
               .slice(0, 6)

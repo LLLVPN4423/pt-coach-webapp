@@ -12,7 +12,7 @@ export function MealCard({ meal }: { meal: MealItem }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-lg font-semibold tracking-tight">{meal.name}</h3>
+            <h3 className="font-display text-lg font-semibold">{meal.name}</h3>
             {meal.approxKcal != null && (
               <span className="rounded-full bg-[var(--sand)] px-2.5 py-0.5 text-sm font-semibold tabular-nums">
                 ~{meal.approxKcal} kcal

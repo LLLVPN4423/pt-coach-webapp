@@ -60,7 +60,7 @@ export default function SettingsPage() {
       </div>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Groq API (tuỳ chọn · Phase sau)</h2>
+        <h2 className="section-title">Groq API (tuỳ chọn · Phase sau)</h2>
         <p className="text-sm text-[var(--muted)]">
           Hiện plan được sinh bằng công thức TDEE + rule. Key chỉ lưu local —
           dùng khi bật AI gen sau này.
@@ -77,7 +77,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Lịch tập & mục tiêu</h2>
+        <h2 className="section-title">Lịch tập & mục tiêu</h2>
         {profile && (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="field">
@@ -165,7 +165,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Backup</h2>
+        <h2 className="section-title">Backup</h2>
         <div className="flex flex-wrap gap-2">
           <button type="button" className="btn btn-primary" onClick={downloadBackup}>
             <IconDownload size={16} /> Export JSON
@@ -192,7 +192,7 @@ export default function SettingsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold text-[var(--danger)]">Nguy hiểm</h2>
+        <h2 className="section-title text-[var(--danger)]">Nguy hiểm</h2>
         <button
           type="button"
           className="btn btn-ghost text-[var(--danger)]"

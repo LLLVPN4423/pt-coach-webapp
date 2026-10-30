@@ -81,7 +81,7 @@ export function ExerciseCard({
                   Buổi {exercise.sessionBlock}
                 </p>
               )}
-              <h3 className="font-semibold leading-snug tracking-tight">
+              <h3 className="font-display font-semibold leading-snug">
                 {exercise.name}
               </h3>
             </div>

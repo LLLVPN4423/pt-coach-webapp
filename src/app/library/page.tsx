@@ -239,7 +239,7 @@ export default function LibraryPage() {
 
       {tab === "off" && (
         <section className="card space-y-3">
-          <h2 className="font-semibold">Open Food Facts</h2>
+          <h2 className="section-title text-base">Open Food Facts</h2>
           <div className="flex flex-wrap gap-2">
             <input
               className="min-w-[200px] flex-1 rounded-xl border border-[var(--line)] bg-[var(--elevated)] px-3 py-2.5 text-sm"

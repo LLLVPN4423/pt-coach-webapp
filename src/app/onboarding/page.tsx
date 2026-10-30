@@ -148,7 +148,7 @@ export default function OnboardingPage() {
 
       {step === 0 && (
         <section className="card space-y-4">
-          <h2 className="text-lg font-semibold">Hồ sơ</h2>
+          <h2 className="section-title">Hồ sơ</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="field sm:col-span-2">
               <label>Tên gọi</label>
@@ -527,7 +527,7 @@ export default function OnboardingPage() {
 
       {step === 1 && (
         <section className="card space-y-4">
-          <h2 className="text-lg font-semibold">InBody / số đo</h2>
+          <h2 className="section-title">InBody / số đo</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="field">
               <label>Cân nặng (kg)</label>
@@ -574,7 +574,7 @@ export default function OnboardingPage() {
 
       {step === 2 && (
         <section className="card space-y-4">
-          <h2 className="text-lg font-semibold">Ràng buộc y tế (bắt buộc rõ)</h2>
+          <h2 className="section-title">Ràng buộc y tế (bắt buộc rõ)</h2>
           <p className="text-sm text-[var(--muted)]">
             Giống NTC / Move With Us: khai báo để lọc bài tập và điều chỉnh ăn.
             Không thay thế khám bác sĩ.

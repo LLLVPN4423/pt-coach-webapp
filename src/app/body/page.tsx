@@ -115,7 +115,7 @@ export default function BodyPage() {
 
       {chart && (
         <section className="card">
-          <p className="mb-2 text-sm font-semibold">Xu hướng cân (gần đây)</p>
+          <p className="section-title mb-2 text-base">Xu hướng cân (gần đây)</p>
           <svg viewBox={`0 0 ${chart.w} ${chart.h}`} className="w-full">
             <path
               d={chart.path}
@@ -129,7 +129,7 @@ export default function BodyPage() {
       )}
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Cập nhật số đo</h2>
+        <h2 className="section-title">Cập nhật số đo</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="field">
             <label>Cân (kg)</label>
@@ -171,7 +171,7 @@ export default function BodyPage() {
       </section>
 
       <section className="card">
-        <h2 className="mb-2 font-semibold">Lịch sử cân</h2>
+        <h2 className="section-title mb-2">Lịch sử cân</h2>
         <ul className="max-h-48 space-y-1 overflow-auto text-sm">
           {weightLog.length === 0 && (
             <li className="text-[var(--muted)]">Chưa có dữ liệu</li>

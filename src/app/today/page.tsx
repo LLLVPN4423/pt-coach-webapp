@@ -124,7 +124,7 @@ export default function TodayPage() {
       <MedicalBanner profile={profile} />
 
       <section className="card space-y-3">
-        <h2 className="text-sm font-semibold">Hoàn cảnh hôm nay</h2>
+        <h2 className="section-title text-base">Hoàn cảnh hôm nay</h2>
         <div className="flex flex-wrap gap-2">
           {CONTEXT_DAY_TAGS.map((t) => {
             const on = todayLog?.contextTags?.includes(t.id);
@@ -300,7 +300,7 @@ export default function TodayPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="chip">{day.isRest ? "Nghỉ / nhẹ" : "Tập"}</p>
-            <h2 className="mt-2 text-xl font-semibold">{day.dayName}</h2>
+            <h2 className="section-title mt-2 text-xl">{day.dayName}</h2>
             <p className="text-[var(--muted)]">{day.focus}</p>
           </div>
           <button
@@ -372,9 +372,9 @@ export default function TodayPage() {
             <IconUtensils size={18} className="text-[var(--accent)]" />
             Dinh dưỡng
           </div>
-          <p className="text-2xl font-semibold">
+          <p className="font-display text-2xl font-semibold tabular-nums">
             {plan.nutrition.dailyCalories}{" "}
-            <span className="text-base font-normal text-[var(--muted)]">
+            <span className="text-base font-normal tracking-normal text-[var(--muted)]">
               kcal
             </span>
           </p>
@@ -393,9 +393,9 @@ export default function TodayPage() {
             <IconDroplets size={18} className="text-[var(--accent)]" />
             Nước · ~{plan.nutrition.waterL}L
           </div>
-          <p className="text-2xl font-semibold">
+          <p className="font-display text-2xl font-semibold tabular-nums">
             {water}{" "}
-            <span className="text-base font-normal text-[var(--muted)]">
+            <span className="text-base font-normal tracking-normal text-[var(--muted)]">
               / {waterGoal} ly
             </span>
           </p>

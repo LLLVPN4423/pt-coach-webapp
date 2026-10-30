@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
-import { Manrope, Syne } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
 import "./globals.css";
 
-const display = Syne({
+/**
+ * Premium Athletic SaaS typography:
+ * - Space Grotesk → brand / page titles / stat values (geometric, strong)
+ * - DM Sans → UI body / forms / tables (high readability, not Inter)
+ * latin-ext for Vietnamese diacritics
+ */
+const display = Space_Grotesk({
   variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  subsets: ["latin", "latin-ext"],
+  weight: ["500", "600", "700"],
 });
 
-const body = Manrope({
+const body = DM_Sans({
   variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {

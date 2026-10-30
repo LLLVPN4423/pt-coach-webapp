@@ -99,7 +99,7 @@ export default function PlanPage() {
 
       {((plan.contextNotes?.length ?? 0) + (plan.sexNotes?.length ?? 0)) > 0 && (
         <section className="card space-y-2 text-sm">
-          <h2 className="font-semibold">Vì sao plan thế này</h2>
+          <h2 className="section-title text-base">Vì sao plan thế này</h2>
           <ul className="list-disc space-y-1 pl-5 text-[var(--muted)]">
             {[...(plan.sexNotes || []), ...(plan.contextNotes || [])].map((n) => (
               <li key={n}>{n}</li>
@@ -112,7 +112,7 @@ export default function PlanPage() {
 
       {(plan.nutrition.medicalNotes?.length ?? 0) > 0 && (
         <section className="card space-y-2">
-          <h2 className="font-semibold">Lưu ý y tế gắn với plan</h2>
+          <h2 className="section-title text-base">Lưu ý y tế gắn với plan</h2>
           <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
             {(plan.nutrition.medicalNotes ?? []).map((n) => (
               <li key={n}>{n}</li>
@@ -122,9 +122,7 @@ export default function PlanPage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
-          Dinh dưỡng
-        </h2>
+        <h2 className="section-title text-xl">Dinh dưỡng</h2>
         <div className="grid gap-3 sm:grid-cols-4">
           {[
             ["Calo", `${plan.nutrition.dailyCalories}`],
@@ -146,9 +144,7 @@ export default function PlanPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
-          Tuần tập
-        </h2>
+        <h2 className="section-title text-xl">Tuần tập</h2>
         <p className="text-sm text-[var(--muted)]">
           Bấm ảnh / “Xem hướng dẫn video” để mở clip YouTube form · sơ đồ cơ
           đánh dấu nhóm chính (đỏ) / phụ.

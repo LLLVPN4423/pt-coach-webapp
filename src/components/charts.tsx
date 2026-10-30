@@ -14,7 +14,9 @@ export function BarRow({
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-[var(--muted)]">{label}</span>
-        <span className="font-semibold tabular-nums">{Math.round(value * 10) / 10}</span>
+        <span className="font-display font-semibold tabular-nums">
+          {Math.round(value * 10) / 10}
+        </span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-[var(--sand)]">
         <div

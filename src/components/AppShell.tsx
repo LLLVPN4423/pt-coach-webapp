@@ -90,9 +90,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
     <div className="app-frame">
       <aside className="app-sidebar">
         <Link href="/today" className="mb-4 px-2">
-          <p className="font-[family-name:var(--font-display)] text-lg font-extrabold tracking-tight text-[var(--text)]">
-            PT Desk
-          </p>
+          <p className="brand-mark text-lg text-[var(--text)]">PT Desk</p>
           <p className="mt-0.5 text-[11px] font-medium text-[var(--muted)]">
             Premium athletic coach
           </p>
@@ -108,9 +106,7 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       <div className="app-main-wrap">
         <header className="app-topbar">
           <Link href="/today" className="min-w-0">
-            <span className="font-[family-name:var(--font-display)] text-base font-extrabold tracking-tight sm:text-lg">
-              PT Desk
-            </span>
+            <span className="brand-mark text-base sm:text-lg">PT Desk</span>
           </Link>
           <nav className="app-topbar-nav flex max-w-[70%] items-center gap-0.5 overflow-x-auto">
             <NavLinks variant="top" />
