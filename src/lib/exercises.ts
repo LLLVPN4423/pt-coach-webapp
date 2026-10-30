@@ -1,6 +1,7 @@
 /**
  * Exercise library backed by free-exercise-db (open dataset + GitHub-hosted images).
  * https://github.com/yuhonas/free-exercise-db
+ * Video: YouTube search-embed (no API key) + results link.
  */
 import catalog from "@/data/exercises-catalog.json";
 
@@ -18,7 +19,9 @@ export interface ExerciseTemplate {
   avoidJoints?: string[];
   cues: string[];
   imageUrl: string;
+  imageUrlAlt?: string;
   videoUrl: string;
+  videoEmbedUrl?: string;
 }
 
 export const EXERCISES = catalog as ExerciseTemplate[];
@@ -35,6 +38,7 @@ export function searchExercises(q: string, limit = 20): ExerciseTemplate[] {
       e.name.toLowerCase().includes(s) ||
       e.muscle.includes(s) ||
       e.equipment.includes(s) ||
+      e.category?.toLowerCase().includes(s) ||
       e.primaryMuscles?.some((m) => m.toLowerCase().includes(s)),
   ).slice(0, limit);
 }
@@ -69,12 +73,19 @@ export function pickByMuscle(
   let pool = EXERCISES.filter(
     (e) => e.muscle === muscle || muscle === "full",
   );
-  // cardio/stretch: use category
   if (muscle === "cardio") {
     pool = EXERCISES.filter(
       (e) =>
         e.category === "cardio" ||
-        /walk|bike|cycle|run|march|cardio/i.test(e.name),
+        /walk|bike|cycle|run|march|cardio|jumping jack/i.test(e.name),
+    );
+  }
+  if (muscle === "core") {
+    pool = EXERCISES.filter(
+      (e) =>
+        e.muscle === "core" ||
+        e.primaryMuscles?.includes("abdominals") ||
+        /plank|crunch|sit-up|dead bug|hollow/i.test(e.name),
     );
   }
   if (opts.jointSafe) pool = pool.filter((e) => e.jointFriendly);
@@ -87,7 +98,6 @@ export function pickByMuscle(
   if (pool.length < count) {
     pool = EXERCISES.filter((e) => e.jointFriendly && e.lowImpact);
   }
-  // Stable variety: rotate by muscle hash
   const start = muscle.length % Math.max(pool.length, 1);
   const rotated = [...pool.slice(start), ...pool.slice(0, start)];
   const out: ExerciseTemplate[] = [];
@@ -99,4 +109,9 @@ export function pickByMuscle(
     if (out.length >= count) break;
   }
   return out;
+}
+
+export function youtubeEmbedFor(name: string): string {
+  const q = `${name} exercise proper form tutorial`;
+  return `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(q)}`;
 }

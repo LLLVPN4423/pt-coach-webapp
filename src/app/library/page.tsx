@@ -62,12 +62,12 @@ export default function LibraryPage() {
     <div className="space-y-6">
       <div>
         <p className="chip">Open data</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl">
+        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
           Thư viện
         </h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          ~{EXERCISES.length} bài tập (free-exercise-db) · {FOODS.length} thực
-          phẩm · tra cứu Open Food Facts
+          {EXERCISES.length} bài tập (free-exercise-db + YouTube form) ·{" "}
+          {FOODS.length} thực phẩm · Open Food Facts barcode
         </p>
       </div>
 

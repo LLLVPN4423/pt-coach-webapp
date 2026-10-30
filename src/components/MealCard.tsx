@@ -5,23 +5,28 @@ export function MealCard({ meal }: { meal: MealItem }) {
     <article className="card !p-4">
       <div className="flex items-start gap-3">
         <div
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-2xl"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-soft)] to-[var(--sand)] text-2xl"
           aria-hidden
         >
           {meal.emoji}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h3 className="text-lg font-semibold">{meal.name}</h3>
+            <h3 className="text-lg font-semibold tracking-tight">{meal.name}</h3>
             {meal.approxKcal != null && (
-              <span className="text-sm text-[var(--muted)]">
+              <span className="rounded-full bg-[var(--sand)] px-2.5 py-0.5 text-sm font-semibold tabular-nums">
                 ~{meal.approxKcal} kcal
               </span>
             )}
           </div>
-          <p className="mt-1 text-sm text-[var(--ink)]">
-            {meal.items.join(" · ")}
-          </p>
+          <ul className="mt-2 space-y-1 text-sm text-[var(--ink)]">
+            {meal.items.map((it) => (
+              <li key={it} className="flex gap-2">
+                <span className="text-[var(--accent)]">▸</span>
+                <span>{it}</span>
+              </li>
+            ))}
+          </ul>
           <div className="mt-2 flex flex-wrap gap-1">
             {meal.tags.map((t) => (
               <span key={t} className="chip">

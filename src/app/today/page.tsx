@@ -40,12 +40,17 @@ export default function TodayPage() {
   const waterGoal = Math.round(plan.nutrition.waterL * 4);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rise">
       <div>
         <p className="text-sm text-[var(--muted)]">Xin chào, {profile.name}</p>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
+        <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)]">
           Hôm nay
         </h1>
+        <p className="mt-1 text-sm text-[var(--muted)]">
+          {plan.schedule
+            ? `${plan.schedule.daysPerWeek} ngày/tuần · ${plan.schedule.sessionsPerDay} buổi × ${plan.schedule.sessionMinutes}p`
+            : day.focus}
+        </p>
       </div>
 
       <MedicalBanner profile={profile} />

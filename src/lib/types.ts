@@ -69,13 +69,28 @@ export interface Profile {
   age: number;
   sex: Sex;
   goal: Goal;
+  /** Free-text focus: e.g. giảm eo, tăng bench, chạy 5k */
+  goalNote: string;
   activity: ActivityLevel;
+  /** Training days per week (1–7) */
   daysPerWeek: number;
+  /** Sessions on a training day (1–2) */
+  sessionsPerDay: number;
+  /** Target minutes per session */
+  sessionMinutes: number;
   availableEquipment: string;
   medical: MedicalFlags;
   createdAt: string;
   updatedAt: string;
 }
+
+export const GOAL_LABELS: Record<Goal, string> = {
+  fat_loss: "Giảm mỡ",
+  muscle_gain: "Tăng cơ",
+  recomp: "Recomp (giữ cơ giảm mỡ)",
+  health: "Sức khỏe / duy trì",
+  performance: "Hiệu suất / sức mạnh",
+};
 
 export interface ExerciseSet {
   id: string;
@@ -87,10 +102,17 @@ export interface ExerciseSet {
   cues?: string[];
   avoidIf?: string[];
   imageUrl?: string;
+  imageUrlAlt?: string;
   gifUrl?: string;
-  /** YouTube search / form guide */
+  /** YouTube search results page */
   videoUrl?: string;
+  /** YouTube embed (search playlist) for in-app player */
+  videoEmbedUrl?: string;
   muscle?: string;
+  primaryMuscles?: string[];
+  secondaryMuscles?: string[];
+  /** Buổi 1 / Buổi 2 when sessionsPerDay > 1 */
+  sessionBlock?: 1 | 2;
 }
 
 export interface WorkoutDay {
@@ -130,6 +152,15 @@ export interface TrainingPlan {
   createdAt: string;
   rationale: string;
   ageBand: AgeBand;
+  /** Snapshot of schedule prefs used to build this plan */
+  schedule: {
+    goal: Goal;
+    goalNote: string;
+    daysPerWeek: number;
+    sessionsPerDay: number;
+    sessionMinutes: number;
+    weeklyMinutes: number;
+  };
   workoutDays: WorkoutDay[];
   nutrition: NutritionPlan;
   medicalSummary: string[];

@@ -15,15 +15,14 @@ import type {
   Profile,
   Sex,
 } from "@/lib/types";
-import { CONDITION_LABELS, JOINT_LABELS } from "@/lib/types";
+import { CONDITION_LABELS, GOAL_LABELS, JOINT_LABELS } from "@/lib/types";
 
-const GOALS: { id: Goal; label: string }[] = [
-  { id: "fat_loss", label: "Giảm mỡ" },
-  { id: "muscle_gain", label: "Tăng cơ" },
-  { id: "recomp", label: "Recomp" },
-  { id: "health", label: "Sức khỏe" },
-  { id: "performance", label: "Hiệu suất" },
-];
+const GOALS = (Object.keys(GOAL_LABELS) as Goal[]).map((id) => ({
+  id,
+  label: GOAL_LABELS[id],
+}));
+
+const SESSION_MINS = [30, 45, 60, 75, 90];
 
 const CONDITIONS = Object.keys(CONDITION_LABELS) as MedicalCondition[];
 const JOINTS = Object.keys(JOINT_LABELS) as JointZone[];
@@ -37,8 +36,11 @@ export default function OnboardingPage() {
   const [age, setAge] = useState(28);
   const [sex, setSex] = useState<Sex>("male");
   const [goal, setGoal] = useState<Goal>("recomp");
+  const [goalNote, setGoalNote] = useState("");
   const [activity, setActivity] = useState<ActivityLevel>("moderate");
   const [daysPerWeek, setDays] = useState(4);
+  const [sessionsPerDay, setSessionsPerDay] = useState(1);
+  const [sessionMinutes, setSessionMinutes] = useState(45);
   const [equipment, setEquipment] = useState("Phòng gym / tạ đơn");
   const [medical, setMedical] = useState<MedicalFlags>(emptyMedical());
 
@@ -86,8 +88,11 @@ export default function OnboardingPage() {
       age,
       sex,
       goal,
+      goalNote: goalNote.trim(),
       activity,
       daysPerWeek,
+      sessionsPerDay,
+      sessionMinutes,
       availableEquipment: equipment,
       medical,
       createdAt: now,
@@ -103,16 +108,18 @@ export default function OnboardingPage() {
     router.replace("/today");
   }
 
+  const weeklyMins = daysPerWeek * sessionsPerDay * sessionMinutes;
+
   return (
-    <div className="mx-auto max-w-xl space-y-6 py-4">
+    <div className="mx-auto max-w-xl space-y-6 py-4 rise">
       <div>
-        <p className="chip mb-3">Phase 1 · cá nhân</p>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl leading-tight text-[var(--ink)]">
+        <p className="chip mb-3">Setup · cá nhân</p>
+        <h1 className="font-[family-name:var(--font-display)] text-4xl leading-[1.05] tracking-tight text-[var(--ink)]">
           PT Desk
         </h1>
         <p className="mt-2 text-[var(--muted)]">
-          Lộ trình ăn · tập có ảnh/clip hướng dẫn, lọc theo ràng buộc y tế — dữ
-          liệu lưu trên máy bạn.
+          Khai mục tiêu + lịch tập rõ ràng → plan có ảnh, sơ đồ cơ và clip
+          YouTube form. Dữ liệu chỉ trên máy bạn.
         </p>
       </div>
 
@@ -155,17 +162,17 @@ export default function OnboardingPage() {
               </select>
             </div>
             <div className="field sm:col-span-2">
-              <label>Mục tiêu</label>
+              <label>Mục tiêu chính</label>
               <div className="flex flex-wrap gap-2">
                 {GOALS.map((g) => (
                   <button
                     key={g.id}
                     type="button"
                     onClick={() => setGoal(g.id)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm ${
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
                       goal === g.id
                         ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-                        : "border-[var(--line)]"
+                        : "border-[var(--line)] bg-white"
                     }`}
                   >
                     {g.label}
@@ -173,8 +180,16 @@ export default function OnboardingPage() {
                 ))}
               </div>
             </div>
+            <div className="field sm:col-span-2">
+              <label>Muốn đạt gì cụ thể? (tuỳ chọn)</label>
+              <input
+                value={goalNote}
+                onChange={(e) => setGoalNote(e.target.value)}
+                placeholder="VD: giảm 4kg / tăng bench / chạy 5km không mệt"
+              />
+            </div>
             <div className="field">
-              <label>Mức vận động</label>
+              <label>Mức vận động nền</label>
               <select
                 value={activity}
                 onChange={(e) =>
@@ -189,20 +204,69 @@ export default function OnboardingPage() {
               </select>
             </div>
             <div className="field">
-              <label>Số buổi tập / tuần</label>
+              <label>Ngày tập / tuần</label>
               <input
                 type="number"
-                min={2}
-                max={6}
+                min={1}
+                max={7}
                 value={daysPerWeek}
                 onChange={(e) => setDays(Number(e.target.value))}
               />
+            </div>
+            <div className="field">
+              <label>Số buổi / ngày tập</label>
+              <div className="flex gap-2">
+                {[1, 2].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setSessionsPerDay(n)}
+                    className={`flex-1 rounded-xl border py-2 text-sm font-semibold ${
+                      sessionsPerDay === n
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                        : "border-[var(--line)] bg-white"
+                    }`}
+                  >
+                    {n} buổi
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label>Thời lượng / buổi</label>
+              <div className="flex flex-wrap gap-2">
+                {SESSION_MINS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setSessionMinutes(m)}
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      sessionMinutes === m
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                        : "border-[var(--line)] bg-white"
+                    }`}
+                  >
+                    {m}p
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="sm:col-span-2 rounded-2xl border border-[var(--line)] bg-[var(--sand)] px-3 py-2 text-sm">
+              <span className="font-semibold text-[var(--ink)]">
+                ~{weeklyMins} phút / tuần
+              </span>
+              <span className="text-[var(--muted)]">
+                {" "}
+                · {daysPerWeek} ngày × {sessionsPerDay} buổi × {sessionMinutes}
+                phút
+              </span>
             </div>
             <div className="field sm:col-span-2">
               <label>Thiết bị sẵn có</label>
               <input
                 value={equipment}
                 onChange={(e) => setEquipment(e.target.value)}
+                placeholder="Bodyweight / tạ đơn / phòng gym…"
               />
             </div>
           </div>

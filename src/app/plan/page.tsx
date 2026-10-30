@@ -9,6 +9,7 @@ import { MedicalBanner } from "@/components/MedicalBanner";
 import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
+import { GOAL_LABELS } from "@/lib/types";
 
 export default function PlanPage() {
   const router = useRouter();
@@ -30,12 +31,15 @@ export default function PlanPage() {
     (profile.medical?.conditions ?? []).includes("pregnancy") ||
     !!profile.medical?.hasRedFlags;
 
+  const sch = plan.schedule;
+  const goalLabel = GOAL_LABELS[sch?.goal ?? profile.goal] ?? profile.goal;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rise">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="chip">v{plan.version}</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl">
+          <p className="chip">Plan v{plan.version}</p>
+          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
             Lộ trình
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">{plan.rationale}</p>
@@ -45,8 +49,44 @@ export default function PlanPage() {
         </button>
       </div>
 
-      <p className="rounded-xl border border-[var(--line)] bg-[var(--sand)] px-3 py-2 text-xs text-[var(--muted)]">
-        Plan cũ trong trình duyệt có thể thiếu meal/macro mới — bấm{" "}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stat-tile rise-delay-1">
+          <p className="label">Mục tiêu</p>
+          <p className="value text-[1.05rem] leading-snug">{goalLabel}</p>
+          {(sch?.goalNote || profile.goalNote) && (
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {sch?.goalNote || profile.goalNote}
+            </p>
+          )}
+        </div>
+        <div className="stat-tile rise-delay-1">
+          <p className="label">Ngày / tuần</p>
+          <p className="value">
+            {sch?.daysPerWeek ?? profile.daysPerWeek}
+            <span className="text-base font-medium text-[var(--muted)]"> ngày</span>
+          </p>
+        </div>
+        <div className="stat-tile rise-delay-2">
+          <p className="label">Buổi / ngày tập</p>
+          <p className="value">
+            {sch?.sessionsPerDay ?? profile.sessionsPerDay ?? 1}
+            <span className="text-base font-medium text-[var(--muted)]"> buổi</span>
+          </p>
+        </div>
+        <div className="stat-tile rise-delay-3">
+          <p className="label">Thời lượng / buổi</p>
+          <p className="value">
+            {sch?.sessionMinutes ?? profile.sessionMinutes ?? 45}
+            <span className="text-base font-medium text-[var(--muted)]"> phút</span>
+          </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            ≈ {sch?.weeklyMinutes ?? "—"} phút / tuần
+          </p>
+        </div>
+      </section>
+
+      <p className="rounded-2xl border border-[var(--line)] bg-white/70 px-3 py-2 text-xs text-[var(--muted)]">
+        Plan cũ có thể thiếu lịch/clip mới —{" "}
         <button
           type="button"
           className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
@@ -54,7 +94,7 @@ export default function PlanPage() {
         >
           Sinh lại
         </button>{" "}
-        để lấy catalog free-exercise-db + foods.
+        (hoặc Cài đặt → Reset onboarding để đổi mục tiêu / lịch).
       </p>
 
       <MedicalBanner profile={profile} />
@@ -71,17 +111,19 @@ export default function PlanPage() {
       )}
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Meal plan</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
+          Dinh dưỡng
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-4">
           {[
             ["Calo", `${plan.nutrition.dailyCalories}`],
             ["Protein", `${plan.nutrition.proteinG}g`],
             ["Carb", `${plan.nutrition.carbsG}g`],
             ["Fat", `${plan.nutrition.fatG}g`],
           ].map(([k, v]) => (
-            <div key={k} className="rounded-xl bg-[var(--sand)] p-3 sm:col-span-1">
-              <p className="text-xs text-[var(--muted)]">{k}</p>
-              <p className="text-lg font-semibold">{v}</p>
+            <div key={k} className="stat-tile">
+              <p className="label">{k}</p>
+              <p className="value">{v}</p>
             </div>
           ))}
         </div>
@@ -93,22 +135,26 @@ export default function PlanPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Tuần tập · ảnh + clip hướng dẫn</h2>
+        <h2 className="font-[family-name:var(--font-display)] text-2xl tracking-tight">
+          Tuần tập
+        </h2>
         <p className="text-sm text-[var(--muted)]">
-          Ảnh minh họa từ free-exercise-db · clip qua YouTube form tutorial (mở
-          tab mới). Pattern giống Nike Training Club / Hevy.
+          Bấm ảnh / “Xem hướng dẫn video” để mở clip YouTube form · sơ đồ cơ
+          đánh dấu nhóm chính (đỏ) / phụ.
         </p>
         <div className="grid gap-4">
           {plan.workoutDays.map((d) => (
             <article
               key={d.dayIndex}
               className={`card space-y-3 ${
-                d.dayIndex === todayIdx ? "ring-2 ring-[var(--accent)]" : ""
+                d.dayIndex === todayIdx
+                  ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]"
+                  : ""
               }`}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <p className="font-semibold">
+                  <p className="font-semibold tracking-tight">
                     {d.dayName}
                     {d.dayIndex === todayIdx ? " · hôm nay" : ""}
                   </p>
@@ -116,10 +162,10 @@ export default function PlanPage() {
                 </div>
                 {d.isRest && <span className="chip">Rest</span>}
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 {d.exercises.map((e) => (
                   <ExerciseCard
-                    key={`${d.dayIndex}-${e.id}`}
+                    key={`${d.dayIndex}-${e.id}-${e.sessionBlock ?? 0}`}
                     exercise={e}
                     dayIndex={d.dayIndex}
                     onSwap={swapExercise}

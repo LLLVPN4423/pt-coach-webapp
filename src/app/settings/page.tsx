@@ -11,6 +11,7 @@ export default function SettingsPage() {
     hydrated,
     profile,
     settings,
+    setProfile,
     setSettings,
     exportBackup,
     importBackup,
@@ -78,16 +79,90 @@ export default function SettingsPage() {
       </section>
 
       <section className="card space-y-3">
-        <h2 className="font-semibold">Lộ trình</h2>
-        <button type="button" className="btn btn-ghost" onClick={regeneratePlan}>
-          Sinh lại plan từ hồ sơ hiện tại
+        <h2 className="font-semibold">Lịch tập & mục tiêu</h2>
+        {profile && (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="field">
+              <label>Ngày / tuần</label>
+              <input
+                type="number"
+                min={1}
+                max={7}
+                value={profile.daysPerWeek}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    daysPerWeek: Number(e.target.value),
+                    updatedAt: new Date().toISOString(),
+                  })
+                }
+              />
+            </div>
+            <div className="field">
+              <label>Buổi / ngày</label>
+              <input
+                type="number"
+                min={1}
+                max={2}
+                value={profile.sessionsPerDay ?? 1}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    sessionsPerDay: Number(e.target.value),
+                    updatedAt: new Date().toISOString(),
+                  })
+                }
+              />
+            </div>
+            <div className="field">
+              <label>Phút / buổi</label>
+              <input
+                type="number"
+                min={20}
+                max={120}
+                step={5}
+                value={profile.sessionMinutes ?? 45}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    sessionMinutes: Number(e.target.value),
+                    updatedAt: new Date().toISOString(),
+                  })
+                }
+              />
+            </div>
+            <div className="field">
+              <label>Ghi chú mục tiêu</label>
+              <input
+                value={profile.goalNote ?? ""}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    goalNote: e.target.value,
+                    updatedAt: new Date().toISOString(),
+                  })
+                }
+                placeholder="VD: giảm eo, tăng squat…"
+              />
+            </div>
+          </div>
+        )}
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            regeneratePlan();
+            setMsg("Đã sinh lại plan theo lịch mới.");
+          }}
+        >
+          Áp dụng & sinh lại plan
         </button>
         <button
           type="button"
           className="btn btn-ghost"
           onClick={() => router.push("/onboarding")}
         >
-          Làm lại onboarding
+          Làm lại onboarding đầy đủ
         </button>
       </section>
 

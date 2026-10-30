@@ -1,8 +1,20 @@
 "use client";
 
 import { normalizeMedical } from "./medical";
-import type { AppState, TrainingPlan } from "./types";
+import type { AppState, Profile, TrainingPlan } from "./types";
 import { STORAGE_KEY } from "./types";
+
+export function normalizeProfile(raw: Profile): Profile {
+  return {
+    ...raw,
+    goalNote: raw.goalNote ?? "",
+    daysPerWeek: raw.daysPerWeek || 3,
+    sessionsPerDay: raw.sessionsPerDay || 1,
+    sessionMinutes: raw.sessionMinutes || 45,
+    availableEquipment: raw.availableEquipment || "",
+    medical: normalizeMedical(raw.medical),
+  };
+}
 
 export const defaultState = (): AppState => ({
   profile: null,
@@ -33,6 +45,14 @@ export function normalizePlan(plan: TrainingPlan | null): TrainingPlan | null {
     medicalSummary: Array.isArray(plan.medicalSummary)
       ? plan.medicalSummary
       : [],
+    schedule: plan.schedule ?? {
+      goal: "health",
+      goalNote: "",
+      daysPerWeek: 3,
+      sessionsPerDay: 1,
+      sessionMinutes: 45,
+      weeklyMinutes: 135,
+    },
     nutrition: {
       ...nutrition,
       meals: Array.isArray(nutrition.meals) ? nutrition.meals : [],
@@ -57,10 +77,7 @@ export function loadState(): AppState {
     const parsed = JSON.parse(raw) as AppState;
     const merged = { ...defaultState(), ...parsed };
     if (merged.profile) {
-      merged.profile = {
-        ...merged.profile,
-        medical: normalizeMedical(merged.profile.medical),
-      };
+      merged.profile = normalizeProfile(merged.profile);
     }
     merged.plan = normalizePlan(merged.plan);
     merged.logs = Array.isArray(merged.logs) ? merged.logs : [];
@@ -90,10 +107,7 @@ export function importStateJson(json: string): AppState {
   }
   const merged = { ...defaultState(), ...parsed };
   if (merged.profile) {
-    merged.profile = {
-      ...merged.profile,
-      medical: normalizeMedical(merged.profile.medical),
-    };
+    merged.profile = normalizeProfile(merged.profile);
   }
   merged.plan = normalizePlan(merged.plan);
   return merged;
