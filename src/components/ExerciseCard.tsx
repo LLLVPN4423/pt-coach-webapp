@@ -26,6 +26,7 @@ export function ExerciseCard({
   const [imgOk, setImgOk] = useState(true);
   const [openSwap, setOpenSwap] = useState(false);
   const [lightbox, setLightbox] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
 
   const tpl = getExercise(exercise.id);
   const primary = exercise.primaryMuscles ?? tpl?.primaryMuscles ?? [];
@@ -45,12 +46,18 @@ export function ExerciseCard({
   const canSwap =
     typeof dayIndex === "number" && typeof onSwap === "function" && alts.length > 0;
 
+  const showDetail = !compact || openDetail;
+
   return (
-    <article className="exercise-card">
+    <article className={`exercise-card ${compact ? "exercise-card--compact" : ""}`}>
       <div className="flex gap-3">
         <button
           type="button"
-          className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[var(--ink-faint)] sm:h-32 sm:w-32"
+          className={`relative shrink-0 overflow-hidden rounded-xl bg-[var(--ink-faint)] ${
+            compact
+              ? "h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem]"
+              : "h-28 w-28 rounded-2xl sm:h-32 sm:w-32"
+          }`}
           onClick={() => setLightbox(true)}
           title="Xem animation 3D"
         >
@@ -65,23 +72,29 @@ export function ExerciseCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[var(--muted)]">
-              <IconDumbbell size={28} />
+              <IconDumbbell size={compact ? 20 : 28} />
             </div>
           )}
-          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
-            3D GIF
-          </span>
+          {!compact && (
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
+              3D GIF
+            </span>
+          )}
         </button>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              {exercise.sessionBlock != null && (
+            <div className="min-w-0">
+              {!compact && exercise.sessionBlock != null && (
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--accent)]">
                   Buổi {exercise.sessionBlock}
                 </p>
               )}
-              <h3 className="font-display font-semibold leading-snug">
+              <h3
+                className={`font-display font-semibold leading-snug ${
+                  compact ? "text-sm sm:text-[0.95rem]" : ""
+                }`}
+              >
                 {exercise.name}
               </h3>
             </div>
@@ -95,38 +108,70 @@ export function ExerciseCard({
             </p>
           </div>
 
-          {!compact && (
-            <MuscleMap primary={primary} secondary={secondary} className="mt-2" />
-          )}
-          {compact && primary.length > 0 && (
+          {compact && !openDetail && primary.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
-              {primary.slice(0, 3).map((m) => (
+              {primary.slice(0, 2).map((m) => (
                 <span key={m} className="chip chip-hot">
+                  {m}
+                </span>
+              ))}
+              {secondary.slice(0, 1).map((m) => (
+                <span key={m} className="chip chip-soft">
                   {m}
                 </span>
               ))}
             </div>
           )}
 
-          {exercise.cues && exercise.cues.length > 0 && !compact && (
-            <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]">
-              {exercise.cues.slice(0, 2).map((c) => (
-                <li key={c}>• {c}</li>
-              ))}
-            </ul>
+          {showDetail && (
+            <>
+              <MuscleMap
+                primary={primary}
+                secondary={secondary}
+                className="mt-2"
+              />
+              {exercise.cues && exercise.cues.length > 0 && (
+                <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]">
+                  {exercise.cues.slice(0, 2).map((c) => (
+                    <li key={c}>• {c}</li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
+
           {exercise.notes && (
             <p className="mt-1 text-xs text-[var(--warn)]">{exercise.notes}</p>
           )}
 
           <div className="mt-2 flex flex-wrap gap-3">
-            <button
-              type="button"
-              className="text-xs font-semibold text-[var(--accent)]"
-              onClick={() => setLightbox(true)}
-            >
-              Phóng animation
-            </button>
+            {compact && (
+              <button
+                type="button"
+                className="text-xs font-semibold text-[var(--accent)]"
+                onClick={() => setOpenDetail((v) => !v)}
+              >
+                {openDetail ? "Thu gọn" : "Chi tiết · sơ đồ cơ"}
+              </button>
+            )}
+            {!compact && (
+              <button
+                type="button"
+                className="text-xs font-semibold text-[var(--accent)]"
+                onClick={() => setLightbox(true)}
+              >
+                Phóng animation
+              </button>
+            )}
+            {compact && (
+              <button
+                type="button"
+                className="text-xs font-semibold text-[var(--muted)] hover:text-[var(--accent)]"
+                onClick={() => setLightbox(true)}
+              >
+                Xem GIF
+              </button>
+            )}
             {canSwap && (
               <button
                 type="button"
@@ -155,8 +200,11 @@ export function ExerciseCard({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={gif} alt={exercise.name} className="w-full object-contain" />
             <p className="mt-2 text-center text-sm font-semibold">{exercise.name}</p>
-            <p className="text-center text-[10px] text-[var(--muted)]">
-              3D workout animation · ExerciseDB (personal use) · AscendAPI
+            <div className="mt-2">
+              <MuscleMap primary={primary} secondary={secondary} />
+            </div>
+            <p className="mt-2 text-center text-[10px] text-[var(--muted)]">
+              3D workout animation · Gym Visual · personal / educational use
             </p>
             <button
               type="button"

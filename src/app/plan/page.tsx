@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { IconRefresh } from "@/components/icons";
-import { ExerciseCard } from "@/components/ExerciseCard";
 import { MealCard } from "@/components/MealCard";
 import { MedicalBanner } from "@/components/MedicalBanner";
 import { PageGate } from "@/components/PageGate";
+import { WeekWorkout } from "@/components/WeekWorkout";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
 import { planNeedsRegen } from "@/lib/storage";
@@ -143,48 +143,13 @@ export default function PlanPage() {
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="section-title text-xl">Tuần tập</h2>
-        <p className="text-sm text-[var(--muted)]">
-          Bấm ảnh / “Xem hướng dẫn video” để mở clip YouTube form · sơ đồ cơ
-          đánh dấu nhóm chính (đỏ) / phụ.
-        </p>
-        <div className="grid gap-4">
-          {plan.workoutDays.map((d) => (
-            <article
-              key={d.dayIndex}
-              className={`card space-y-3 ${
-                d.dayIndex === todayIdx
-                  ? "ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]"
-                  : ""
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-semibold tracking-tight">
-                    {d.dayName}
-                    {d.dayIndex === todayIdx ? " · hôm nay" : ""}
-                  </p>
-                  <p className="text-sm text-[var(--muted)]">{d.focus}</p>
-                </div>
-                {d.isRest && <span className="chip">Rest</span>}
-              </div>
-              <div className="space-y-2.5">
-                {d.exercises.map((e) => (
-                  <ExerciseCard
-                    key={`${d.dayIndex}-${e.id}-${e.sessionBlock ?? 0}`}
-                    exercise={e}
-                    dayIndex={d.dayIndex}
-                    onSwap={swapExercise}
-                    avoidJoints={avoidJoints}
-                    lowImpact={lowImpact}
-                  />
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
+      <WeekWorkout
+        days={plan.workoutDays}
+        todayIdx={todayIdx}
+        onSwap={swapExercise}
+        avoidJoints={avoidJoints}
+        lowImpact={lowImpact}
+      />
     </div>
   );
 }
