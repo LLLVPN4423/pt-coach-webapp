@@ -14,12 +14,20 @@ import {
 import { pickByMuscle } from "./exercises";
 import { buildMealsFromFoods } from "./foods";
 import { medicalPlanNotes } from "./medical";
+import {
+  distributeTrainDays,
+  rankForStyle,
+  splitForStyle,
+  stylePrescription,
+  TRAINING_STYLE_LABELS,
+} from "./training-styles";
 import type {
   AgeBand,
   ExerciseSet,
   InBodyMetrics,
   Profile,
   TrainingPlan,
+  TrainingStyle,
   WorkoutDay,
 } from "./types";
 import { GOAL_LABELS, MEDIA_VERSION } from "./types";
@@ -51,45 +59,15 @@ function bandGuidance(band: AgeBand) {
   }
 }
 
-function exercisesForMinutes(mins: number): number {
-  if (mins <= 25) return 3;
-  if (mins <= 35) return 4;
-  if (mins <= 45) return 5;
-  if (mins <= 60) return 6;
-  if (mins <= 75) return 7;
-  return 8;
-}
-
-function splitForDays(days: number, band: AgeBand) {
-  if (days <= 2) {
-    return [
-      { focus: "Full body A", muscles: ["legs", "chest", "back", "core"] },
-      { focus: "Full body B", muscles: ["posterior", "shoulders", "arms", "core"] },
-    ];
-  }
-  if (days === 3) {
-    return [
-      { focus: "Upper", muscles: ["chest", "back", "shoulders", "arms"] },
-      { focus: "Lower", muscles: ["legs", "posterior", "core"] },
-      { focus: "Full + cardio", muscles: ["full", "core", "cardio"] },
-    ];
-  }
-  if (days === 4) {
-    return [
-      { focus: "Push", muscles: ["chest", "shoulders", "arms"] },
-      { focus: "Pull", muscles: ["back", "arms", "core"] },
-      { focus: "Legs", muscles: ["legs", "posterior", "core"] },
-      { focus: "Active recovery", muscles: ["cardio", "core"] },
-    ];
-  }
-  const base = [
-    { focus: "Push", muscles: ["chest", "shoulders", "arms"] },
-    { focus: "Pull", muscles: ["back", "arms"] },
-    { focus: "Legs", muscles: ["legs", "posterior"] },
-    { focus: "Upper pump", muscles: ["chest", "back", "shoulders"] },
-    { focus: "Posterior + core", muscles: ["posterior", "core", "cardio"] },
-  ];
-  return base.slice(0, Math.min(days, band === "senior" ? 4 : 6));
+function exercisesForMinutes(mins: number, volumeScale = 1): number {
+  let n = 5;
+  if (mins <= 25) n = 3;
+  else if (mins <= 35) n = 4;
+  else if (mins <= 45) n = 5;
+  else if (mins <= 60) n = 6;
+  else if (mins <= 75) n = 7;
+  else n = 8;
+  return Math.max(3, Math.min(10, Math.round(n * volumeScale)));
 }
 
 function venueEquipment(profile: Profile): {
@@ -100,33 +78,46 @@ function venueEquipment(profile: Profile): {
   const venue = life?.venue || "gym";
   const tags = life?.equipmentTags || [];
   if (venue === "hotel_travel" || venue === "home") {
-    if (tags.includes("dumbbell")) return { prefer: ["dumbbell", "bodyweight", "band"], bodyweightOnly: false };
-    if (tags.includes("band")) return { prefer: ["band", "bodyweight"], bodyweightOnly: false };
+    if (tags.includes("dumbbell"))
+      return { prefer: ["dumbbell", "bodyweight", "band"], bodyweightOnly: false };
+    if (tags.includes("band"))
+      return { prefer: ["band", "bodyweight"], bodyweightOnly: false };
     return { prefer: ["bodyweight"], bodyweightOnly: true };
   }
-  if (venue === "outdoor") return { prefer: ["bodyweight", "band"], bodyweightOnly: false };
+  if (venue === "outdoor")
+    return { prefer: ["bodyweight", "band"], bodyweightOnly: false };
   if (tags.length) return { prefer: tags, bodyweightOnly: false };
   const eq = (profile.availableEquipment || "").toLowerCase();
   if (eq.includes("body") || eq.includes("nhà"))
     return { prefer: ["bodyweight", "dumbbell", "band"], bodyweightOnly: false };
-  return { prefer: ["dumbbell", "barbell", "machine", "bodyweight", "any"], bodyweightOnly: false };
+  return {
+    prefer: ["dumbbell", "barbell", "machine", "bodyweight", "any"],
+    bodyweightOnly: false,
+  };
+}
+
+function resolveStyle(profile: Profile): TrainingStyle {
+  return profile.trainingStyle || "balanced";
 }
 
 function toSet(
   p: ReturnType<typeof pickByMuscle>[0],
-  guide: { sets: number; rest: number },
-  band: AgeBand,
+  rx: ReturnType<typeof stylePrescription>,
   jointSafe: boolean,
   sessionBlock?: 1 | 2,
+  styleNote?: string,
 ): ExerciseSet {
   const isCardio = p.muscle === "cardio" || p.category === "cardio";
+  const notes = [jointSafe ? "Giữ ROM không đau" : null, styleNote]
+    .filter(Boolean)
+    .join(" · ");
   return {
     id: p.id,
     name: p.name,
-    sets: isCardio ? 1 : guide.sets,
-    reps: isCardio ? "15–25 phút" : band === "senior" ? "10–12" : "8–12",
-    restSec: isCardio ? 0 : guide.rest,
-    notes: jointSafe ? "Giữ ROM không đau" : undefined,
+    sets: isCardio ? 1 : rx.sets,
+    reps: isCardio ? "15–25 phút" : rx.reps,
+    restSec: isCardio ? 0 : rx.restSec,
+    notes: notes || undefined,
     cues: p.cues,
     avoidIf: p.avoidJoints,
     imageUrl: p.imageUrl,
@@ -146,13 +137,24 @@ export function generatePlan(
 ): TrainingPlan {
   const band = ageBand(profile.age);
   const guide = bandGuidance(band);
+  const style = resolveStyle(profile);
+  const rx = stylePrescription(style, band, guide);
+  const styleLabel = TRAINING_STYLE_LABELS[style];
+
   let daysPerWeek = Math.min(7, Math.max(1, profile.daysPerWeek || 3));
-  if (profile.life?.caregivingLoad === "heavy") daysPerWeek = Math.min(daysPerWeek, 3);
-  if (profile.life?.examOrDeadlineMode) daysPerWeek = Math.min(daysPerWeek, 3);
+  if (profile.life?.caregivingLoad === "heavy")
+    daysPerWeek = Math.min(daysPerWeek, 3);
+  if (profile.life?.examOrDeadlineMode)
+    daysPerWeek = Math.min(daysPerWeek, 3);
+  if (style === "bro_split") daysPerWeek = Math.max(daysPerWeek, 4);
+  if (style === "minimalist") daysPerWeek = Math.min(daysPerWeek, 4);
 
   const sessionsPerDay = Math.min(2, Math.max(1, profile.sessionsPerDay || 1));
   const sessionMinutes = effectiveSessionMinutes(profile);
-  const perSessionCount = exercisesForMinutes(sessionMinutes);
+  const perSessionCount = exercisesForMinutes(
+    sessionMinutes,
+    rx.volumeScale ?? 1,
+  );
   const { prefer, bodyweightOnly } = venueEquipment(profile);
 
   const bmr = bmrMifflin(
@@ -194,18 +196,16 @@ export function generatePlan(
     (!medical?.clinicianCleared && conditions.length > 0) ||
     profile.life?.temporaryFlags?.includes("minor_injury_flare");
 
-  const templates = splitForDays(daysPerWeek, band);
-  const trainIndices: number[] = [];
-  const step = Math.max(1, Math.floor(7 / templates.length));
-  for (let i = 0; i < templates.length; i++) {
-    trainIndices.push(Math.min(6, i * step));
-  }
+  const templates = splitForStyle(style, daysPerWeek, band);
+  const trainIndices = distributeTrainDays(templates.length);
 
-  // Mark one travel/BW day if travels often
   let travelDayIdx = -1;
   if (profile.life?.travelsOften && trainIndices.length) {
     travelDayIdx = trainIndices[trainIndices.length - 1];
   }
+
+  const styleRank = (e: { name: string; equipment: string }) =>
+    rankForStyle(e.name, e.equipment, style);
 
   const workoutDays: WorkoutDay[] = DAY_NAMES.map((dayName, dayIndex) => {
     const tIdx = trainIndices.indexOf(dayIndex);
@@ -221,10 +221,9 @@ export function generatePlan(
             sets: 1,
             reps: "1",
             restSec: 0,
-            notes: "Active recovery",
+            notes: "Active recovery · xen kẽ đều với ngày tập",
             cues: ["Thoải mái", "Không gắng sức"],
-            imageUrl:
-              "https://static.exercisedb.dev/media/01qpYSe.gif",
+            imageUrl: "https://static.exercisedb.dev/media/01qpYSe.gif",
             gifUrl: "https://static.exercisedb.dev/media/01qpYSe.gif",
             muscle: "cardio",
             primaryMuscles: ["cardiovascular system"],
@@ -233,10 +232,17 @@ export function generatePlan(
         isRest: true,
       };
     }
-    const t = templates[tIdx];
+    const t = templates[tIdx % templates.length];
     const isTravel = dayIndex === travelDayIdx;
     const exercises: ExerciseSet[] = [];
     const blocks = sessionsPerDay >= 2 ? ([1, 2] as const) : ([1] as const);
+    const failCue =
+      style === "to_failure"
+        ? "Set cuối gần failure (đừng phá form)"
+        : style === "science"
+          ? "Để RIR 1–3"
+          : undefined;
+
     for (const block of blocks) {
       const muscles = block === 2 ? [...t.muscles].reverse() : t.muscles;
       let muscleList = muscles;
@@ -260,6 +266,7 @@ export function generatePlan(
             avoidJoints: jointZones,
             equipmentPrefer: prefer,
             bodyweightOnly: bodyweightOnly || isTravel,
+            styleRank,
           },
           muscle === "cardio" || muscle === "core" ? 1 : 2,
         );
@@ -267,7 +274,7 @@ export function generatePlan(
           if (exercises.filter((e) => e.sessionBlock === block).length >= target)
             break;
           if (exercises.some((e) => e.id === p.id)) continue;
-          exercises.push(toSet(p, guide, band, jointSafe, block));
+          exercises.push(toSet(p, rx, jointSafe, block, failCue));
         }
       }
     }
@@ -296,11 +303,17 @@ export function generatePlan(
   const sNotes = sexAwareNotes(profile);
   const weeklyMinutes = daysPerWeek * sessionsPerDay * sessionMinutes;
   const goalLabel = GOAL_LABELS[profile.goal] ?? profile.goal;
+  const restDays = 7 - trainIndices.length;
+  const trainPattern = trainIndices
+    .map((i) => DAY_NAMES[i].replace("Thứ ", "T"))
+    .join(" · ");
 
   const notes = [
     guide.note,
+    rx.note,
+    `Phong cách: ${styleLabel}.`,
     `Mục tiêu: ${goalLabel}${profile.goalNote ? ` — ${profile.goalNote}` : ""}.`,
-    `Lịch: ${daysPerWeek} ngày/tuần · ${sessionsPerDay}×${sessionMinutes}p (~${weeklyMinutes}p/tuần).`,
+    `Lịch: tập ${trainPattern} (${daysPerWeek} ngày) · nghỉ ${restDays} ngày xen đều · ${sessionsPerDay}×${sessionMinutes}p (~${weeklyMinutes}p/tuần).`,
     `BMR ~${bmr} · TDEE ~${tdee} · ${calories} kcal.`,
     ...sNotes.slice(0, 2),
     ...ctxNotes.slice(0, 3),
@@ -311,11 +324,12 @@ export function generatePlan(
     id: uid(),
     version: previousVersion + 1,
     createdAt: new Date().toISOString(),
-    rationale: `${goalLabel} · ${daysPerWeek}n · ${sessionsPerDay}×${sessionMinutes}p · ${profile.life?.venue || "gym"}`,
+    rationale: `${styleLabel} · ${goalLabel} · ${daysPerWeek}n · ${sessionsPerDay}×${sessionMinutes}p`,
     ageBand: band,
     schedule: {
       goal: profile.goal,
       goalNote: profile.goalNote || "",
+      trainingStyle: style,
       daysPerWeek,
       sessionsPerDay,
       sessionMinutes,

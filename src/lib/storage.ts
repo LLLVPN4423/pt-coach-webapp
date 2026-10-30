@@ -24,6 +24,7 @@ export function normalizeProfile(raw: Profile): Profile {
   return {
     ...raw,
     goalNote: raw.goalNote ?? "",
+    trainingStyle: raw.trainingStyle || "balanced",
     daysPerWeek: raw.daysPerWeek || 3,
     sessionsPerDay: raw.sessionsPerDay || 1,
     sessionMinutes: raw.sessionMinutes || 45,

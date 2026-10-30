@@ -7,6 +7,19 @@ export type Goal =
   | "health"
   | "performance";
 
+/** Phong cách / triết lý tập — ảnh hưởng split, sets/reps, ưu tiên bài. */
+export type TrainingStyle =
+  | "balanced"
+  | "hypertrophy"
+  | "strength"
+  | "to_failure"
+  | "science"
+  | "gorilla"
+  | "full_body"
+  | "athletic"
+  | "bro_split"
+  | "minimalist";
+
 export type ActivityLevel =
   | "sedentary"
   | "light"
@@ -112,6 +125,8 @@ export interface Profile {
   sex: Sex;
   goal: Goal;
   goalNote: string;
+  /** Phong cách tập (PPL, failure, science, gorilla…) */
+  trainingStyle: TrainingStyle;
   activity: ActivityLevel;
   daysPerWeek: number;
   sessionsPerDay: number;
@@ -194,6 +209,7 @@ export interface TrainingPlan {
   schedule: {
     goal: Goal;
     goalNote: string;
+    trainingStyle?: TrainingStyle;
     daysPerWeek: number;
     sessionsPerDay: number;
     sessionMinutes: number;

@@ -11,6 +11,7 @@ import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
 import { planNeedsRegen } from "@/lib/storage";
 import { GOAL_LABELS } from "@/lib/types";
+import { TRAINING_STYLE_LABELS } from "@/lib/training-styles";
 
 export default function PlanPage() {
   const router = useRouter();
@@ -34,6 +35,10 @@ export default function PlanPage() {
 
   const sch = plan.schedule;
   const goalLabel = GOAL_LABELS[sch?.goal ?? profile.goal] ?? profile.goal;
+  const styleKey = sch?.trainingStyle || profile.trainingStyle || "balanced";
+  const styleLabel = TRAINING_STYLE_LABELS[styleKey] ?? styleKey;
+  const trainDays = plan.workoutDays.filter((d) => !d.isRest).length;
+  const restDays = plan.workoutDays.filter((d) => d.isRest).length;
 
   return (
     <div className="space-y-6 rise">
@@ -48,17 +53,29 @@ export default function PlanPage() {
         </button>
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="stat-tile rise-delay-1">
-          <p className="label">Mục tiêu</p>
-          <p className="value text-[1.05rem] leading-snug">{goalLabel}</p>
-          {(sch?.goalNote || profile.goalNote) && (
-            <p className="mt-1 text-xs text-[var(--muted)]">
-              {sch?.goalNote || profile.goalNote}
-            </p>
-          )}
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="stat-tile rise-delay-1 sm:col-span-2">
+          <p className="label">Phong cách</p>
+          <p className="value text-[1.05rem] leading-snug">{styleLabel}</p>
+          <p className="mt-1 text-xs text-[var(--muted)]">
+            Mục tiêu: {goalLabel}
+            {(sch?.goalNote || profile.goalNote)
+              ? ` — ${sch?.goalNote || profile.goalNote}`
+              : ""}
+          </p>
         </div>
         <div className="stat-tile rise-delay-1">
+          <p className="label">Tập / nghỉ</p>
+          <p className="value">
+            {trainDays}
+            <span className="text-base font-medium text-[var(--muted)]">
+              {" "}
+              / {restDays}
+            </span>
+          </p>
+          <p className="mt-1 text-xs text-[var(--muted)]">xen đều trong tuần</p>
+        </div>
+        <div className="stat-tile rise-delay-2">
           <p className="label">Ngày / tuần</p>
           <p className="value">
             {sch?.daysPerWeek ?? profile.daysPerWeek}

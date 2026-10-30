@@ -14,6 +14,7 @@ import type {
   MedicalFlags,
   Profile,
   Sex,
+  TrainingStyle,
 } from "@/lib/types";
 import {
   emptyFemaleCycle,
@@ -24,6 +25,11 @@ import {
 } from "@/lib/context";
 import { CONDITION_LABELS, GOAL_LABELS, JOINT_LABELS } from "@/lib/types";
 import type { LifeContext } from "@/lib/types";
+import {
+  TRAINING_STYLE_BLURBS,
+  TRAINING_STYLE_LABELS,
+  TRAINING_STYLES,
+} from "@/lib/training-styles";
 
 const GOALS = (Object.keys(GOAL_LABELS) as Goal[]).map((id) => ({
   id,
@@ -45,6 +51,8 @@ export default function OnboardingPage() {
   const [sex, setSex] = useState<Sex>("male");
   const [goal, setGoal] = useState<Goal>("recomp");
   const [goalNote, setGoalNote] = useState("");
+  const [trainingStyle, setTrainingStyle] =
+    useState<TrainingStyle>("balanced");
   const [activity, setActivity] = useState<ActivityLevel>("moderate");
   const [daysPerWeek, setDays] = useState(4);
   const [sessionsPerDay, setSessionsPerDay] = useState(1);
@@ -100,6 +108,7 @@ export default function OnboardingPage() {
       sex,
       goal,
       goalNote: goalNote.trim(),
+      trainingStyle,
       activity,
       daysPerWeek,
       sessionsPerDay,
@@ -199,6 +208,30 @@ export default function OnboardingPage() {
                 onChange={(e) => setGoalNote(e.target.value)}
                 placeholder="VD: giảm 4kg / tăng bench / chạy 5km không mệt"
               />
+            </div>
+            <div className="field sm:col-span-2">
+              <label>Phong cách tập</label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {TRAINING_STYLES.map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setTrainingStyle(id)}
+                    className={`rounded-xl border px-3 py-2 text-left ${
+                      trainingStyle === id
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                        : "border-[var(--line)] bg-[var(--elevated)]"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold leading-snug">
+                      {TRAINING_STYLE_LABELS[id]}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug text-[var(--muted)]">
+                      {TRAINING_STYLE_BLURBS[id]}
+                    </p>
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="field">
               <label>Mức vận động nền</label>

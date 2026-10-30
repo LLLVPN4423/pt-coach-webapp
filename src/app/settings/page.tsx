@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconDownload, IconTrash, IconUpload } from "@/components/icons";
 import { usePtStore } from "@/hooks/usePtStore";
+import type { TrainingStyle } from "@/lib/types";
+import {
+  TRAINING_STYLE_BLURBS,
+  TRAINING_STYLE_LABELS,
+  TRAINING_STYLES,
+} from "@/lib/training-styles";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -80,6 +86,32 @@ export default function SettingsPage() {
         <h2 className="section-title">Lịch tập & mục tiêu</h2>
         {profile && (
           <div className="grid gap-3 sm:grid-cols-2">
+            <div className="field sm:col-span-2">
+              <label>Phong cách tập</label>
+              <select
+                value={profile.trainingStyle || "balanced"}
+                onChange={(e) =>
+                  setProfile({
+                    ...profile,
+                    trainingStyle: e.target.value as TrainingStyle,
+                    updatedAt: new Date().toISOString(),
+                  })
+                }
+              >
+                {TRAINING_STYLES.map((id) => (
+                  <option key={id} value={id}>
+                    {TRAINING_STYLE_LABELS[id]}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                {
+                  TRAINING_STYLE_BLURBS[
+                    (profile.trainingStyle || "balanced") as TrainingStyle
+                  ]
+                }
+              </p>
+            </div>
             <div className="field">
               <label>Ngày / tuần</label>
               <input

@@ -93,6 +93,8 @@ export function pickByMuscle(
     avoidJoints?: string[];
     equipmentPrefer?: string[];
     bodyweightOnly?: boolean;
+    /** Sort bias from training style */
+    styleRank?: (e: ExerciseTemplate) => number;
   },
   count: number,
 ): ExerciseTemplate[] {
@@ -134,7 +136,12 @@ export function pickByMuscle(
     pool = EXERCISES.filter((e) => e.jointFriendly && e.lowImpact);
   }
   const start = muscle.length % Math.max(pool.length, 1);
-  const rotated = [...pool.slice(start), ...pool.slice(0, start)];
+  let rotated = [...pool.slice(start), ...pool.slice(0, start)];
+  if (opts.styleRank) {
+    rotated = [...rotated].sort(
+      (a, b) => (opts.styleRank!(b) || 0) - (opts.styleRank!(a) || 0),
+    );
+  }
   const out: ExerciseTemplate[] = [];
   const seen = new Set<string>();
   for (const e of rotated) {
