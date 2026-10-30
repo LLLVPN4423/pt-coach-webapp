@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { bmi, bmrMifflin, tdeeFromBmr, todayKey } from "@/lib/calc";
 
@@ -65,7 +66,9 @@ export default function BodyPage() {
     return { path, w, h, last: points[points.length - 1]?.weightKg };
   }, [weightLog]);
 
-  if (!profile) return null;
+  if (!hydrated || !profile) {
+    return <PageGate ready={false} />;
+  }
 
   function saveFull() {
     setMetrics({

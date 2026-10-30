@@ -11,6 +11,7 @@ import {
 } from "@/components/icons";
 import { ExerciseCard } from "@/components/ExerciseCard";
 import { MedicalBanner } from "@/components/MedicalBanner";
+import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
 
@@ -19,19 +20,21 @@ export default function TodayPage() {
   const { hydrated, profile, plan, todayLog, updateLog, swapExercise } =
     usePtStore();
   const day = plan?.workoutDays[weekdayIndex()];
-  const avoidJoints = profile?.medical.jointZones;
+  const avoidJoints = profile?.medical?.jointZones;
   const lowImpact =
     !!profile &&
-    (profile.medical.jointZones.length > 0 ||
-      profile.medical.conditions.includes("herniated_disc") ||
-      profile.medical.conditions.includes("pregnancy") ||
-      profile.medical.hasRedFlags);
+    ((profile.medical?.jointZones?.length ?? 0) > 0 ||
+      (profile.medical?.conditions ?? []).includes("herniated_disc") ||
+      (profile.medical?.conditions ?? []).includes("pregnancy") ||
+      !!profile.medical?.hasRedFlags);
 
   useEffect(() => {
     if (hydrated && (!profile || !plan)) router.replace("/onboarding");
   }, [hydrated, profile, plan, router]);
 
-  if (!profile || !plan || !day) return null;
+  if (!hydrated || !profile || !plan || !day) {
+    return <PageGate ready={false} />;
+  }
 
   const water = todayLog?.waterGlasses ?? 0;
   const waterGoal = Math.round(plan.nutrition.waterL * 4);

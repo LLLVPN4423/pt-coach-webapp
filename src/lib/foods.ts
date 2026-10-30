@@ -52,22 +52,22 @@ export function buildMealsFromFoods(
   profile: Profile,
 ): MealItem[] {
   const avoid: string[] = [];
+  const medical = profile.medical;
+  const conditions = medical?.conditions ?? [];
   // Soft allergen avoid from notes
   const notes = (
-    profile.medical.otherNotes +
+    (medical?.otherNotes ?? "") +
     " " +
-    profile.medical.medicationNotes
+    (medical?.medicationNotes ?? "")
   ).toLowerCase();
   if (notes.includes("sữa") || notes.includes("lactose")) avoid.push("sữa");
   if (notes.includes("gluten") || notes.includes("celiac")) avoid.push("gluten");
   if (notes.includes("đậu phộng") || notes.includes("peanut"))
     avoid.push("đậu phộng");
 
-  const pregnancy = profile.medical.conditions.includes("pregnancy");
-  const diabetes = profile.medical.conditions.includes("diabetes");
-  const edHistory = profile.medical.conditions.includes(
-    "eating_disorder_history",
-  );
+  const pregnancy = conditions.includes("pregnancy");
+  const diabetes = conditions.includes("diabetes");
+  const edHistory = conditions.includes("eating_disorder_history");
 
   const breakfastP = pickFood("protein", avoid, ["sáng", "rẻ"]);
   const breakfastC = pickFood("carb", avoid, ["sáng"]);

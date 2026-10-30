@@ -6,26 +6,29 @@ import { IconRefresh } from "@/components/icons";
 import { ExerciseCard } from "@/components/ExerciseCard";
 import { MealCard } from "@/components/MealCard";
 import { MedicalBanner } from "@/components/MedicalBanner";
+import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
 
 export default function PlanPage() {
   const router = useRouter();
   const { hydrated, profile, plan, regeneratePlan, swapExercise } = usePtStore();
-  const avoidJoints = profile?.medical.jointZones;
-  const lowImpact =
-    !!profile &&
-    (profile.medical.jointZones.length > 0 ||
-      profile.medical.conditions.includes("herniated_disc") ||
-      profile.medical.conditions.includes("pregnancy") ||
-      profile.medical.hasRedFlags);
   const todayIdx = weekdayIndex();
 
   useEffect(() => {
     if (hydrated && (!profile || !plan)) router.replace("/onboarding");
   }, [hydrated, profile, plan, router]);
 
-  if (!plan || !profile) return null;
+  if (!hydrated || !plan || !profile) {
+    return <PageGate ready={false} />;
+  }
+
+  const avoidJoints = profile.medical?.jointZones;
+  const lowImpact =
+    (profile.medical?.jointZones?.length ?? 0) > 0 ||
+    (profile.medical?.conditions ?? []).includes("herniated_disc") ||
+    (profile.medical?.conditions ?? []).includes("pregnancy") ||
+    !!profile.medical?.hasRedFlags;
 
   return (
     <div className="space-y-6">
@@ -42,13 +45,25 @@ export default function PlanPage() {
         </button>
       </div>
 
+      <p className="rounded-xl border border-[var(--line)] bg-[var(--sand)] px-3 py-2 text-xs text-[var(--muted)]">
+        Plan cũ trong trình duyệt có thể thiếu meal/macro mới — bấm{" "}
+        <button
+          type="button"
+          className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
+          onClick={regeneratePlan}
+        >
+          Sinh lại
+        </button>{" "}
+        để lấy catalog free-exercise-db + foods.
+      </p>
+
       <MedicalBanner profile={profile} />
 
-      {plan.nutrition.medicalNotes.length > 0 && (
+      {(plan.nutrition.medicalNotes?.length ?? 0) > 0 && (
         <section className="card space-y-2">
           <h2 className="font-semibold">Lưu ý y tế gắn với plan</h2>
           <ul className="list-disc space-y-1 pl-5 text-sm text-[var(--muted)]">
-            {plan.nutrition.medicalNotes.map((n) => (
+            {(plan.nutrition.medicalNotes ?? []).map((n) => (
               <li key={n}>{n}</li>
             ))}
           </ul>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconDumbbell, IconUtensils } from "@/components/icons";
+import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { EXERCISES, searchExercises } from "@/lib/exercises";
 import { FOODS, fetchOffProduct } from "@/lib/foods";
@@ -53,7 +54,9 @@ export default function LibraryPage() {
     }
   }
 
-  if (!profile) return null;
+  if (!hydrated || !profile) {
+    return <PageGate ready={false} />;
+  }
 
   return (
     <div className="space-y-6">

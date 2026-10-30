@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Client-only localStorage app: skip Cache Components / instant-nav
+  // validation that flags early `return null` while hydrating.
   images: {
     remotePatterns: [
       {

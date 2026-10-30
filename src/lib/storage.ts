@@ -1,7 +1,7 @@
 "use client";
 
 import { normalizeMedical } from "./medical";
-import type { AppState } from "./types";
+import type { AppState, TrainingPlan } from "./types";
 import { STORAGE_KEY } from "./types";
 
 export const defaultState = (): AppState => ({
@@ -13,6 +13,38 @@ export const defaultState = (): AppState => ({
   weightLog: [],
   settings: { units: "metric" },
 });
+
+/** Patch older localStorage plan shapes so UI never crashes. */
+export function normalizePlan(plan: TrainingPlan | null): TrainingPlan | null {
+  if (!plan || typeof plan !== "object") return null;
+  const nutrition = plan.nutrition ?? {
+    dailyCalories: 0,
+    proteinG: 0,
+    carbsG: 0,
+    fatG: 0,
+    waterL: 3,
+    meals: [],
+    notes: [],
+    medicalNotes: [],
+  };
+  return {
+    ...plan,
+    workoutDays: Array.isArray(plan.workoutDays) ? plan.workoutDays : [],
+    medicalSummary: Array.isArray(plan.medicalSummary)
+      ? plan.medicalSummary
+      : [],
+    nutrition: {
+      ...nutrition,
+      meals: Array.isArray(nutrition.meals) ? nutrition.meals : [],
+      notes: Array.isArray(nutrition.notes) ? nutrition.notes : [],
+      medicalNotes: Array.isArray(nutrition.medicalNotes)
+        ? nutrition.medicalNotes
+        : Array.isArray(plan.medicalSummary)
+          ? plan.medicalSummary
+          : [],
+    },
+  };
+}
 
 export function loadState(): AppState {
   if (typeof window === "undefined") return defaultState();
@@ -30,6 +62,12 @@ export function loadState(): AppState {
         medical: normalizeMedical(merged.profile.medical),
       };
     }
+    merged.plan = normalizePlan(merged.plan);
+    merged.logs = Array.isArray(merged.logs) ? merged.logs : [];
+    merged.weightLog = Array.isArray(merged.weightLog) ? merged.weightLog : [];
+    merged.metricsHistory = Array.isArray(merged.metricsHistory)
+      ? merged.metricsHistory
+      : [];
     return merged;
   } catch {
     return defaultState();
@@ -50,5 +88,13 @@ export function importStateJson(json: string): AppState {
   if (!parsed || typeof parsed !== "object") {
     throw new Error("Invalid backup file");
   }
-  return { ...defaultState(), ...parsed };
+  const merged = { ...defaultState(), ...parsed };
+  if (merged.profile) {
+    merged.profile = {
+      ...merged.profile,
+      medical: normalizeMedical(merged.profile.medical),
+    };
+  }
+  merged.plan = normalizePlan(merged.plan);
+  return merged;
 }

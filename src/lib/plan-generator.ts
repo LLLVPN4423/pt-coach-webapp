@@ -118,10 +118,11 @@ export function generatePlan(
   );
   const tdee = tdeeFromBmr(bmr, profile.activity);
   let calories = calorieTarget(tdee, profile.goal, band);
-  if (profile.medical.conditions.includes("eating_disorder_history")) {
+  const conditions = profile.medical?.conditions ?? [];
+  if (conditions.includes("eating_disorder_history")) {
     calories = Math.max(calories, tdee - 100);
   }
-  if (profile.medical.conditions.includes("pregnancy")) {
+  if (conditions.includes("pregnancy")) {
     calories = Math.max(calories, tdee);
   }
 
@@ -132,21 +133,22 @@ export function generatePlan(
     metrics.bodyFatPct,
   );
 
+  const medical = profile.medical;
+  const jointZones = medical?.jointZones ?? [];
   const jointSafe =
-    profile.medical.jointZones.length > 0 ||
-    profile.medical.conditions.includes("herniated_disc") ||
-    profile.medical.conditions.includes("osteoporosis");
+    jointZones.length > 0 ||
+    conditions.includes("herniated_disc") ||
+    conditions.includes("osteoporosis");
   const lowImpact =
     jointSafe ||
-    profile.medical.conditions.includes("heart_disease") ||
-    profile.medical.conditions.includes("hypertension") ||
-    profile.medical.conditions.includes("pregnancy") ||
-    profile.medical.hasRedFlags ||
+    conditions.includes("heart_disease") ||
+    conditions.includes("hypertension") ||
+    conditions.includes("pregnancy") ||
+    medical?.hasRedFlags ||
     band === "senior" ||
-    (!profile.medical.clinicianCleared &&
-      profile.medical.conditions.length > 0);
+    (!medical?.clinicianCleared && conditions.length > 0);
 
-  const avoidJoints = profile.medical.jointZones;
+  const avoidJoints = jointZones;
   const templates = splitForDays(profile.daysPerWeek, band);
   const trainIndices: number[] = [];
   const step = Math.max(1, Math.floor(7 / templates.length));
