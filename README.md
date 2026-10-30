@@ -9,11 +9,27 @@ Stack: **Next.js + localStorage** (host frontend Vercel là đủ).
 
 - Onboarding + **ràng buộc y tế rõ** (bệnh nền, khớp, cờ đỏ, disclaimer, clearance)
 - InBody nhập tay → TDEE / macro / plan theo nhóm tuổi
-- **Bài tập có ảnh** (free-exercise-db) + **link clip form** (YouTube)
-- **Meal plan** có emoji, tag, allergen, món thay thế
+- **~367 bài tập** ảnh từ [free-exercise-db](https://github.com/yuhonas/free-exercise-db) + clip form YouTube; **đổi bài** cùng nhóm cơ
+- **Meal plan** từ foods-catalog (macro / khẩu phần / allergen) + gợi ý đổi món
+- **Thư viện**: tìm bài tập · bảng thực phẩm · tra mã vạch [Open Food Facts](https://world.openfoodfacts.org/)
 - Hôm nay: check-in tập / ăn / nước
 - Cơ thể: BMI/BMR/TDEE, lịch sử cân
 - Export / import JSON backup
+
+## Nguồn dữ liệu mở / free
+
+| Nguồn | Dùng cho |
+|-------|----------|
+| free-exercise-db | Catalog + ảnh động tác (GitHub raw) |
+| Open Food Facts API | Tra barcode kcal/macro client-side |
+| Foods catalog (VN/USDA-style) | Meal plan macros trong app |
+| Mifflin–St Jeor | BMR / TDEE |
+
+Rebuild catalog sau khi cập nhật `exercises-raw.json`:
+
+```bash
+npm run build:data
+```
 
 ## Cảm hứng UX
 
@@ -22,7 +38,7 @@ Stack: **Next.js + localStorage** (host frontend Vercel là đủ).
 | Nike Training Club | Demo động tác + cues kỹ thuật |
 | Hevy / Strong | Thẻ bài tập rõ sets/reps + media |
 | MyFitnessPal | Macro + theo dõi ngày |
-| Move With Us | Swap meal, hỏi y tế onboarding, disclaimer |
+| Move With Us | Swap exercise/meal, hỏi y tế onboarding, disclaimer |
 
 ## Chạy local
 

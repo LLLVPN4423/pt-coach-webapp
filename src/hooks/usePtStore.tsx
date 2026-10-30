@@ -21,6 +21,7 @@ import { todayKey } from "@/lib/calc";
 import type {
   AppState,
   DayLog,
+  ExerciseSet,
   InBodyMetrics,
   Profile,
   Settings,
@@ -33,6 +34,11 @@ interface PtStore extends AppState {
   setMetrics: (metrics: InBodyMetrics) => void;
   bootstrap: (profile: Profile, metrics: InBodyMetrics) => void;
   regeneratePlan: () => void;
+  swapExercise: (
+    dayIndex: number,
+    oldId: string,
+    next: ExerciseSet,
+  ) => void;
   updateLog: (patch: Partial<DayLog> & { date?: string }) => void;
   addWeight: (entry: WeightEntry) => void;
   setSettings: (settings: Partial<Settings>) => void;
@@ -121,6 +127,31 @@ export function PtStoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const swapExercise = useCallback(
+    (dayIndex: number, oldId: string, next: ExerciseSet) => {
+      setState((s) => {
+        if (!s.plan) return s;
+        return {
+          ...s,
+          plan: {
+            ...s.plan,
+            workoutDays: s.plan.workoutDays.map((d) =>
+              d.dayIndex !== dayIndex
+                ? d
+                : {
+                    ...d,
+                    exercises: d.exercises.map((e) =>
+                      e.id === oldId ? { ...next, sets: e.sets, reps: e.reps, restSec: e.restSec } : e,
+                    ),
+                  },
+            ),
+          },
+        };
+      });
+    },
+    [],
+  );
+
   const updateLog = useCallback(
     (patch: Partial<DayLog> & { date?: string }) => {
       const date = patch.date ?? todayKey();
@@ -186,6 +217,7 @@ export function PtStoreProvider({ children }: { children: ReactNode }) {
     setMetrics,
     bootstrap,
     regeneratePlan,
+    swapExercise,
     updateLog,
     addWeight,
     setSettings,

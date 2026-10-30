@@ -6,12 +6,12 @@ import {
   tdeeFromBmr,
 } from "./calc";
 import { pickByMuscle } from "./exercises";
+import { buildMealsFromFoods } from "./foods";
 import { medicalPlanNotes } from "./medical";
 import type {
   AgeBand,
   ExerciseSet,
   InBodyMetrics,
-  MealItem,
   Profile,
   TrainingPlan,
   WorkoutDay,
@@ -101,79 +101,6 @@ function splitForDays(
   ];
   if (band === "senior") return base.slice(0, Math.min(days, 4));
   return base.slice(0, Math.min(days, 5));
-}
-
-function mealPlan(
-  proteinG: number,
-  calories: number,
-  profile: Profile,
-): MealItem[] {
-  const veganLean =
-    profile.medical.conditions.includes("eating_disorder_history");
-  const pregnancy = profile.medical.conditions.includes("pregnancy");
-  const diabetes = profile.medical.conditions.includes("diabetes");
-
-  const proteinMain = pregnancy
-    ? "Trứng / cá chín kỹ / đậu phụ"
-    : "Ức gà / thịt bò nạc / cá / đậu phụ";
-
-  return [
-    {
-      name: "Bữa sáng",
-      emoji: "🌅",
-      items: [
-        "Trứng luộc hoặc ốp la",
-        "Sữa đậu nành / sữa tươi",
-        "Chuối hoặc bánh mì nguyên cám",
-      ],
-      approxKcal: Math.round(calories * 0.25),
-      tags: ["dễ nấu", "protein"],
-      allergens: ["trứng", "sữa"],
-      swaps: ["Yến mạch + sữa chua Hy Lạp", "Bánh mì trứng + rau"],
-      tip: diabetes
-        ? "Ưu tiên carb phức hợp, thêm chất xơ."
-        : "Ăn trong 1–2 giờ sau khi dậy nếu tập sáng.",
-    },
-    {
-      name: "Bữa trưa",
-      emoji: "🍱",
-      items: [proteinMain, "Cơm gạo lứt / khoai lang", "Rau xanh ½ đĩa"],
-      approxKcal: Math.round(calories * 0.35),
-      tags: ["macro chính", "no lâu"],
-      allergens: [],
-      swaps: ["Cơm trắng vừa phải + thêm rau", "Bún + thịt/đậu + rau sống"],
-      tip: veganLean
-        ? "Không siết calo gắt — giữ đủ năng lượng."
-        : `Nhắm ~${Math.round(proteinG * 0.35)}g protein bữa này.`,
-    },
-    {
-      name: "Bữa phụ",
-      emoji: "🍎",
-      items: [
-        "Sữa chua Hy Lạp hoặc đậu phộng",
-        "Trái cây",
-        diabetes ? "Hạt + táo (tránh nước ngọt)" : "Whey / sữa đậu nếu cần",
-      ],
-      approxKcal: Math.round(calories * 0.15),
-      tags: ["nhanh", "tiện"],
-      allergens: ["sữa", "đậu phộng"],
-      swaps: ["Bánh gạo + trứng", "Sữa chua thực vật + berries"],
-    },
-    {
-      name: "Bữa tối",
-      emoji: "🍲",
-      items: [
-        "Cá / trứng / đậu",
-        "Rau nhiều",
-        pregnancy ? "Tinh bột vừa, tránh sống/tái" : "Tinh bột vừa phải",
-      ],
-      approxKcal: Math.round(calories * 0.25),
-      tags: ["nhẹ bụng", "phục hồi"],
-      allergens: [],
-      swaps: ["Canh + đậu phụ + khoai", "Salad đạm + khoai luộc"],
-      tip: "Cách giờ ngủ ≥2–3 giờ nếu dễ trào ngược.",
-    },
-  ];
 }
 
 export function generatePlan(
@@ -324,7 +251,7 @@ export function generatePlan(
       carbsG: macros.carbsG,
       fatG: macros.fatG,
       waterL,
-      meals: mealPlan(macros.proteinG, calories, profile),
+      meals: buildMealsFromFoods(calories, macros.proteinG, profile),
       notes,
       medicalNotes: medNotes,
     },

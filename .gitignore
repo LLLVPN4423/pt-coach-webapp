@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# bulky open-data raw dumps (rebuild via npm run build:data)
+src/data/exercises-raw.json

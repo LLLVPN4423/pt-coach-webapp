@@ -14,6 +14,7 @@ import { PtStoreProvider, usePtStore } from "@/hooks/usePtStore";
 const NAV = [
   { href: "/today", label: "Hôm nay", icon: IconHome },
   { href: "/plan", label: "Lộ trình", icon: IconDumbbell },
+  { href: "/library", label: "Thư viện", icon: IconCalendar },
   { href: "/body", label: "Cơ thể", icon: IconActivity },
   { href: "/settings", label: "Cài đặt", icon: IconSettings },
 ];

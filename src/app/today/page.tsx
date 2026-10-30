@@ -16,8 +16,16 @@ import { weekdayIndex } from "@/lib/calc";
 
 export default function TodayPage() {
   const router = useRouter();
-  const { hydrated, profile, plan, todayLog, updateLog } = usePtStore();
+  const { hydrated, profile, plan, todayLog, updateLog, swapExercise } =
+    usePtStore();
   const day = plan?.workoutDays[weekdayIndex()];
+  const avoidJoints = profile?.medical.jointZones;
+  const lowImpact =
+    !!profile &&
+    (profile.medical.jointZones.length > 0 ||
+      profile.medical.conditions.includes("herniated_disc") ||
+      profile.medical.conditions.includes("pregnancy") ||
+      profile.medical.hasRedFlags);
 
   useEffect(() => {
     if (hydrated && (!profile || !plan)) router.replace("/onboarding");
@@ -57,15 +65,31 @@ export default function TodayPage() {
         </div>
         <div className="space-y-2">
           {day.exercises.map((ex) => (
-            <ExerciseCard key={ex.id + ex.name} exercise={ex} compact />
+            <ExerciseCard
+              key={ex.id + ex.name}
+              exercise={ex}
+              compact
+              dayIndex={day.dayIndex}
+              onSwap={swapExercise}
+              avoidJoints={avoidJoints}
+              lowImpact={lowImpact}
+            />
           ))}
         </div>
-        <Link
-          href="/plan"
-          className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--accent)]"
-        >
-          <IconDumbbell size={14} /> Xem cả tuần + meal plan
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/plan"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--accent)]"
+          >
+            <IconDumbbell size={14} /> Xem cả tuần + meal plan
+          </Link>
+          <Link
+            href="/library"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--accent)]"
+          >
+            <IconUtensils size={14} /> Thư viện bài tập / thực phẩm
+          </Link>
+        </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2">

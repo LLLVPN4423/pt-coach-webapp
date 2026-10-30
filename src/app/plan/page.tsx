@@ -11,7 +11,14 @@ import { weekdayIndex } from "@/lib/calc";
 
 export default function PlanPage() {
   const router = useRouter();
-  const { hydrated, profile, plan, regeneratePlan } = usePtStore();
+  const { hydrated, profile, plan, regeneratePlan, swapExercise } = usePtStore();
+  const avoidJoints = profile?.medical.jointZones;
+  const lowImpact =
+    !!profile &&
+    (profile.medical.jointZones.length > 0 ||
+      profile.medical.conditions.includes("herniated_disc") ||
+      profile.medical.conditions.includes("pregnancy") ||
+      profile.medical.hasRedFlags);
   const todayIdx = weekdayIndex();
 
   useEffect(() => {
@@ -96,7 +103,14 @@ export default function PlanPage() {
               </div>
               <div className="space-y-2">
                 {d.exercises.map((e) => (
-                  <ExerciseCard key={`${d.dayIndex}-${e.id}`} exercise={e} />
+                  <ExerciseCard
+                    key={`${d.dayIndex}-${e.id}`}
+                    exercise={e}
+                    dayIndex={d.dayIndex}
+                    onSwap={swapExercise}
+                    avoidJoints={avoidJoints}
+                    lowImpact={lowImpact}
+                  />
                 ))}
               </div>
             </article>
