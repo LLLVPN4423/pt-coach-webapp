@@ -59,7 +59,7 @@ export function ExerciseCard({
             <img
               src={gif}
               alt={exercise.name}
-              className="h-full w-full object-contain bg-white"
+              className="h-full w-full object-contain bg-[var(--surface)]"
               loading="lazy"
               onError={() => setImgOk(false)}
             />
@@ -148,7 +148,7 @@ export function ExerciseCard({
           role="presentation"
         >
           <div
-            className="max-h-[90vh] max-w-lg overflow-auto rounded-2xl bg-white p-3"
+            className="max-h-[90vh] max-w-lg overflow-auto rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
           >
@@ -201,7 +201,7 @@ export function ExerciseCard({
               <img
                 src={a.gifUrl || a.imageUrl}
                 alt=""
-                className="h-10 w-10 rounded-lg object-contain bg-white"
+                className="h-10 w-10 rounded-lg object-contain bg-[var(--surface)]"
                 loading="lazy"
               />
               <span className="min-w-0 flex-1 truncate">{a.name}</span>

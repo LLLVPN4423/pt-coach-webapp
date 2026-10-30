@@ -27,8 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${display.variable} ${body.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">
+    <html
+      lang="vi"
+      className={`${display.variable} ${body.variable} h-full`}
+      style={{ colorScheme: "dark" }}
+    >
+      <body className="flex min-h-full flex-col antialiased">
         <AppShell>{children}</AppShell>
       </body>
     </html>

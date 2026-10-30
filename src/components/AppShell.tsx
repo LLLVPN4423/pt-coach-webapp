@@ -12,13 +12,56 @@ import {
 import { PtStoreProvider, usePtStore } from "@/hooks/usePtStore";
 
 const NAV = [
-  { href: "/today", label: "Hôm nay", icon: IconHome },
-  { href: "/plan", label: "Lộ trình", icon: IconDumbbell },
-  { href: "/progress", label: "Tiến độ", icon: IconActivity },
-  { href: "/library", label: "Thư viện", icon: IconCalendar },
-  { href: "/body", label: "Cơ thể", icon: IconDumbbell },
-  { href: "/settings", label: "Cài đặt", icon: IconSettings },
+  { href: "/today", label: "Hôm nay", icon: IconHome, bottom: true },
+  { href: "/plan", label: "Lộ trình", icon: IconDumbbell, bottom: true },
+  { href: "/progress", label: "Tiến độ", icon: IconActivity, bottom: true },
+  { href: "/library", label: "Thư viện", icon: IconCalendar, bottom: true },
+  { href: "/body", label: "Cơ thể", icon: IconActivity, bottom: false },
+  { href: "/settings", label: "Cài đặt", icon: IconSettings, bottom: true },
 ];
+
+function NavLinks({
+  variant,
+}: {
+  variant: "side" | "top" | "bottom";
+}) {
+  const pathname = usePathname();
+  const items =
+    variant === "bottom" ? NAV.filter((n) => n.bottom) : NAV;
+  return (
+    <>
+      {items.map(({ href, label, icon: Icon }) => {
+        const active = pathname.startsWith(href);
+        if (variant === "bottom") {
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`nav-link nav-link-bottom ${active ? "is-active" : ""}`}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          );
+        }
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={`nav-link ${active ? "is-active" : ""} ${
+              variant === "top" ? "!gap-1 !px-2 !py-1.5 !text-xs" : ""
+            }`}
+          >
+            <Icon size={variant === "top" ? 14 : 16} />
+            <span className={variant === "top" ? "hidden md:inline" : ""}>
+              {label}
+            </span>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
 
 function ShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,60 +71,71 @@ function ShellInner({ children }: { children: React.ReactNode }) {
   if (!hydrated) {
     return (
       <div className="flex flex-1 items-center justify-center p-8 text-[var(--muted)]">
-        Đang tải bàn PT…
+        Đang tải PT Desk…
+      </div>
+    );
+  }
+
+  if (hideNav || !profile) {
+    return (
+      <div className="app-frame">
+        <div className="app-main-wrap">
+          <main className="app-content !pb-8">{children}</main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      {!hideNav && profile && (
-        <header className="sticky top-0 z-20 border-b border-[var(--line)]/70 bg-[color-mix(in_srgb,var(--surface)_80%,transparent)] backdrop-blur-xl">
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-            <Link href="/today" className="group flex items-baseline gap-2">
-              <span className="font-[family-name:var(--font-display)] text-xl font-extrabold tracking-tight text-[var(--ink)]">
-                PT Desk
-              </span>
-              <span className="hidden text-xs text-[var(--muted)] sm:inline">
-                coach cá nhân
-              </span>
-            </Link>
-            <nav className="flex items-center gap-0.5 overflow-x-auto">
-              {NAV.map(({ href, label, icon: Icon }) => {
-                const active = pathname.startsWith(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm transition ${
-                      active
-                        ? "bg-[var(--accent)] text-white shadow-sm"
-                        : "text-[var(--muted)] hover:bg-[var(--sand)] hover:text-[var(--ink)]"
-                    }`}
-                  >
-                    <Icon size={15} />
-                    <span className="hidden sm:inline">{label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+    <div className="app-frame">
+      <aside className="app-sidebar">
+        <Link href="/today" className="mb-4 px-2">
+          <p className="font-[family-name:var(--font-display)] text-lg font-extrabold tracking-tight text-[var(--text)]">
+            PT Desk
+          </p>
+          <p className="mt-0.5 text-[11px] font-medium text-[var(--muted)]">
+            Premium athletic coach
+          </p>
+        </Link>
+        <nav className="flex flex-1 flex-col gap-0.5">
+          <NavLinks variant="side" />
+        </nav>
+        <p className="mt-auto px-2 pt-4 text-[10px] leading-relaxed text-[var(--muted)]">
+          Cá nhân · không thay thế bác sĩ
+        </p>
+      </aside>
+
+      <div className="app-main-wrap">
+        <header className="app-topbar">
+          <Link href="/today" className="min-w-0">
+            <span className="font-[family-name:var(--font-display)] text-base font-extrabold tracking-tight sm:text-lg">
+              PT Desk
+            </span>
+          </Link>
+          <nav className="app-topbar-nav flex max-w-[70%] items-center gap-0.5 overflow-x-auto">
+            <NavLinks variant="top" />
+          </nav>
         </header>
-      )}
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
-      {!hideNav && profile && (
-        <footer className="border-t border-[var(--line)]/60 px-4 py-3 text-center text-[10px] text-[var(--muted)] sm:text-xs">
-          Công cụ cá nhân · không thay thế bác sĩ / PT · GIF ©{" "}
+
+        <main className="app-content">{children}</main>
+
+        <footer className="hidden border-t border-[var(--line)] px-4 py-3 text-center text-[10px] text-[var(--muted)] md:block">
+          GIF ©{" "}
           <a
             href="https://gymvisual.com/"
-            className="underline"
+            className="text-[var(--accent)] underline-offset-2 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
             Gym visual
-          </a>
+          </a>{" "}
+          · personal / educational use
         </footer>
-      )}
+      </div>
+
+      <nav className="app-bottom-nav" aria-label="Điều hướng chính">
+        <NavLinks variant="bottom" />
+      </nav>
     </div>
   );
 }

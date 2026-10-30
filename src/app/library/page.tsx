@@ -62,10 +62,8 @@ export default function LibraryPage() {
     <div className="space-y-6 rise">
       <div>
         <p className="chip">Open data · 3D GIF</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
-          Thư viện
-        </h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <h1 className="page-title mt-2">Thư viện</h1>
+        <p className="page-sub">
           {EXERCISES.length} bài tập (Gym Visual 3D GIF) · {FOODS.length} thực
           phẩm · Open Food Facts
         </p>
@@ -96,7 +94,7 @@ export default function LibraryPage() {
       {tab !== "off" && (
         <>
           <input
-            className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+            className="w-full rounded-xl border border-[var(--line)] bg-[var(--elevated)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
             placeholder={
               tab === "exercises" ? "Tìm bài tập…" : "Tìm thực phẩm…"
             }
@@ -112,7 +110,7 @@ export default function LibraryPage() {
                   className={`rounded-full border px-2.5 py-1 text-xs ${
                     muscle === m
                       ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                      : "border-[var(--line)] bg-white"
+                      : "border-[var(--line)] bg-[var(--elevated)]"
                   }`}
                   onClick={() => setMuscle(m)}
                 >
@@ -130,7 +128,7 @@ export default function LibraryPage() {
                   className={`rounded-full border px-2.5 py-1 text-xs ${
                     equipment === m
                       ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                      : "border-[var(--line)] bg-white"
+                      : "border-[var(--line)] bg-[var(--elevated)]"
                   }`}
                   onClick={() => setEquipment(m)}
                 >
@@ -148,7 +146,7 @@ export default function LibraryPage() {
                   className={`rounded-full border px-2.5 py-1 text-xs ${
                     foodGroup === g
                       ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                      : "border-[var(--line)] bg-white"
+                      : "border-[var(--line)] bg-[var(--elevated)]"
                   }`}
                   onClick={() => setFoodGroup(g)}
                 >
@@ -166,13 +164,13 @@ export default function LibraryPage() {
             {exercises.map((e) => (
               <article
                 key={e.id}
-                className="flex gap-3 rounded-2xl border border-[var(--line)] bg-white/80 p-2"
+                className="flex gap-3 rounded-2xl border border-[var(--line)] bg-[var(--elevated)]/80 p-2"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={e.gifUrl || e.imageUrl}
                   alt=""
-                  className="h-20 w-20 rounded-xl bg-white object-contain"
+                  className="h-20 w-20 rounded-xl bg-[var(--elevated)] object-contain"
                   loading="lazy"
                 />
                 <div className="min-w-0 flex-1">
@@ -201,27 +199,27 @@ export default function LibraryPage() {
 
       {tab === "foods" && (
         <>
-          <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
-            <table className="w-full min-w-[520px] text-left text-sm">
-              <thead className="bg-[var(--sand)] text-xs text-[var(--muted)]">
+          <div className="table-wrap">
+            <table className="min-w-[520px]">
+              <thead>
                 <tr>
-                  <th className="px-3 py-2">Tên</th>
-                  <th className="px-3 py-2">Nhóm</th>
-                  <th className="px-3 py-2">kcal</th>
-                  <th className="px-3 py-2">P</th>
-                  <th className="px-3 py-2">C</th>
-                  <th className="px-3 py-2">F</th>
+                  <th>Tên</th>
+                  <th>Nhóm</th>
+                  <th>kcal</th>
+                  <th>P</th>
+                  <th>C</th>
+                  <th>F</th>
                 </tr>
               </thead>
               <tbody>
                 {foods.map((f) => (
-                  <tr key={f.id} className="border-t border-[var(--line)]">
-                    <td className="px-3 py-2 font-medium">{f.name}</td>
-                    <td className="px-3 py-2 text-[var(--muted)]">{f.group}</td>
-                    <td className="px-3 py-2">{f.kcal}</td>
-                    <td className="px-3 py-2">{f.protein}</td>
-                    <td className="px-3 py-2">{f.carbs}</td>
-                    <td className="px-3 py-2">{f.fat}</td>
+                  <tr key={f.id}>
+                    <td className="font-medium">{f.name}</td>
+                    <td className="text-[var(--muted)]">{f.group}</td>
+                    <td>{f.kcal}</td>
+                    <td>{f.protein}</td>
+                    <td>{f.carbs}</td>
+                    <td>{f.fat}</td>
                   </tr>
                 ))}
               </tbody>
@@ -244,7 +242,7 @@ export default function LibraryPage() {
           <h2 className="font-semibold">Open Food Facts</h2>
           <div className="flex flex-wrap gap-2">
             <input
-              className="min-w-[200px] flex-1 rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm"
+              className="min-w-[200px] flex-1 rounded-xl border border-[var(--line)] bg-[var(--elevated)] px-3 py-2.5 text-sm"
               placeholder="Mã vạch"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}

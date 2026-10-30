@@ -97,10 +97,8 @@ export default function TodayPage() {
     <div className="space-y-6 rise">
       <div>
         <p className="text-sm text-[var(--muted)]">Xin chào, {profile.name}</p>
-        <h1 className="font-[family-name:var(--font-display)] text-4xl tracking-tight">
-          Hôm nay
-        </h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <h1 className="page-title">Hôm nay</h1>
+        <p className="page-sub">
           Điểm tuần {score} · {weekDone}/{plan.schedule?.daysPerWeek ?? profile.daysPerWeek}{" "}
           buổi ·{" "}
           {plan.schedule
@@ -110,7 +108,7 @@ export default function TodayPage() {
       </div>
 
       {needsRegen && (
-        <div className="rounded-2xl border border-[var(--warn)]/40 bg-[#fff6e8] px-3 py-2 text-sm">
+        <div className="banner-warn px-3 py-2 text-sm">
           Catalog 3D GIF mới —{" "}
           <button
             type="button"
@@ -236,7 +234,7 @@ export default function TodayPage() {
                       className={`rounded-full border px-2 py-0.5 text-[10px] ${
                         on
                           ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                          : "border-[var(--line)] bg-white"
+                          : "border-[var(--line)] bg-[var(--elevated)]"
                       }`}
                     >
                       {label}
@@ -269,7 +267,7 @@ export default function TodayPage() {
           )}
 
         {(deload || deloadOverride) && (
-          <div className="rounded-xl border border-[var(--warn)]/30 bg-[#fff6e8] px-3 py-2 text-xs">
+          <div className="banner-warn px-3 py-2 text-xs">
             <strong>Chế độ nhẹ hôm nay</strong> — giảm set, ưu tiên low-impact.
             Deload vẫn được tính tiến độ một phần.
             <button

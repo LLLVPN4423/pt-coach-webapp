@@ -91,10 +91,8 @@ export default function BodyPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Cơ thể
-        </h1>
-        <p className="text-sm text-[var(--muted)]">
+        <h1 className="page-title">Cơ thể</h1>
+        <p className="page-sub">
           Theo dõi cân / % mỡ · cập nhật InBody sẽ sinh lại lộ trình
         </p>
       </div>
@@ -107,9 +105,9 @@ export default function BodyPage() {
             ["TDEE", stats.tdee],
             ["Cân", `${latestMetrics.weightKg} kg`],
           ].map(([k, v]) => (
-            <div key={k as string} className="card py-3">
-              <p className="text-xs text-[var(--muted)]">{k}</p>
-              <p className="text-xl font-semibold">{v}</p>
+            <div key={k as string} className="stat-tile">
+              <p className="label">{k}</p>
+              <p className="value">{v}</p>
             </div>
           ))}
         </section>

@@ -53,10 +53,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-[family-name:var(--font-display)] text-3xl">
-          Cài đặt
-        </h1>
-        <p className="text-sm text-[var(--muted)]">
+        <h1 className="page-title">Cài đặt</h1>
+        <p className="page-sub">
           Dữ liệu lưu localStorage trên máy bạn (kiểu Study Desk)
         </p>
       </div>

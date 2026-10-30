@@ -128,9 +128,7 @@ export default function OnboardingPage() {
     <div className="mx-auto max-w-xl space-y-6 py-4 rise">
       <div>
         <p className="chip mb-3">Setup · cá nhân</p>
-        <h1 className="font-[family-name:var(--font-display)] text-4xl leading-[1.05] tracking-tight text-[var(--ink)]">
-          PT Desk
-        </h1>
+        <h1 className="page-title">PT Desk</h1>
         <p className="mt-2 text-[var(--muted)]">
           Khai mục tiêu + lịch tập rõ ràng → plan có ảnh, sơ đồ cơ và clip
           YouTube form. Dữ liệu chỉ trên máy bạn.
@@ -186,7 +184,7 @@ export default function OnboardingPage() {
                     className={`rounded-full border px-3 py-1.5 text-sm ${
                       goal === g.id
                         ? "border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]"
-                        : "border-[var(--line)] bg-white"
+                        : "border-[var(--line)] bg-[var(--elevated)]"
                     }`}
                   >
                     {g.label}
@@ -238,7 +236,7 @@ export default function OnboardingPage() {
                     className={`flex-1 rounded-xl border py-2 text-sm font-semibold ${
                       sessionsPerDay === n
                         ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                        : "border-[var(--line)] bg-white"
+                        : "border-[var(--line)] bg-[var(--elevated)]"
                     }`}
                   >
                     {n} buổi
@@ -257,7 +255,7 @@ export default function OnboardingPage() {
                     className={`rounded-full border px-3 py-1.5 text-sm ${
                       sessionMinutes === m
                         ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                        : "border-[var(--line)] bg-white"
+                        : "border-[var(--line)] bg-[var(--elevated)]"
                     }`}
                   >
                     {m}p
@@ -296,7 +294,7 @@ export default function OnboardingPage() {
                       className={`rounded-full border px-2.5 py-1 text-xs ${
                         life.scheduleType === id
                           ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                          : "border-[var(--line)] bg-white"
+                          : "border-[var(--line)] bg-[var(--elevated)]"
                       }`}
                     >
                       {SCHEDULE_LABELS[id]}
@@ -316,7 +314,7 @@ export default function OnboardingPage() {
                     className={`rounded-full border px-2.5 py-1 text-xs ${
                       life.venue === id
                         ? "border-[var(--accent)] bg-[var(--accent-soft)]"
-                        : "border-[var(--line)] bg-white"
+                        : "border-[var(--line)] bg-[var(--elevated)]"
                     }`}
                   >
                     {VENUE_LABELS[id]}
@@ -582,7 +580,7 @@ export default function OnboardingPage() {
             Không thay thế khám bác sĩ.
           </p>
 
-          <div className="rounded-xl border border-[var(--danger)]/30 bg-[#fde8e4] p-3 space-y-2">
+          <div className="banner-danger space-y-2 p-3">
             <label className="flex items-start gap-2 text-sm font-medium">
               <input
                 type="checkbox"
@@ -650,7 +648,7 @@ export default function OnboardingPage() {
                     onClick={() => toggleJoint(j)}
                     className={`rounded-lg border px-2.5 py-1.5 text-sm ${
                       on
-                        ? "border-[var(--warn)] bg-[#fff6e8]"
+                        ? "border-[var(--warn)] banner-warn"
                         : "border-[var(--line)]"
                     }`}
                   >
@@ -706,7 +704,7 @@ export default function OnboardingPage() {
           </div>
 
           {needsClearance && (
-            <label className="flex items-start gap-2 rounded-xl border border-[var(--warn)]/40 bg-[#fff6e8] p-3 text-sm">
+            <label className="banner-warn flex items-start gap-2 p-3 text-sm">
               <input
                 type="checkbox"
                 className="mt-1"

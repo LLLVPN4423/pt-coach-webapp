@@ -40,10 +40,8 @@ export default function PlanPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="chip">Plan v{plan.version}</p>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
-            Lộ trình
-          </h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">{plan.rationale}</p>
+          <h1 className="page-title mt-2">Lộ trình</h1>
+          <p className="page-sub">{plan.rationale}</p>
         </div>
         <button type="button" className="btn btn-ghost" onClick={regeneratePlan}>
           <IconRefresh size={16} /> Sinh lại
@@ -87,7 +85,7 @@ export default function PlanPage() {
       </section>
 
       {planNeedsRegen(plan) && (
-        <p className="rounded-2xl border border-[var(--warn)]/40 bg-[#fff6e8] px-3 py-2 text-xs">
+        <p className="banner-warn px-3 py-2 text-xs">
           Plan chưa có 3D GIF / hoàn cảnh mới —{" "}
           <button
             type="button"

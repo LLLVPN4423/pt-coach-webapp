@@ -43,10 +43,8 @@ export default function ProgressPage() {
     <div className="space-y-6 rise">
       <div>
         <p className="chip">Đánh giá lộ trình</p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
-          Tiến độ
-        </h1>
-        <p className="mt-1 text-sm text-[var(--muted)]">
+        <h1 className="page-title mt-2">Tiến độ</h1>
+        <p className="page-sub">
           Điểm tuần từ check-in tập / ăn / nước (deload vẫn được tính một phần).
         </p>
       </div>

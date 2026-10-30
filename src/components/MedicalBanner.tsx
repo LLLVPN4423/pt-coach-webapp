@@ -6,7 +6,7 @@ export function MedicalBanner({ profile }: { profile: Profile }) {
   const chips = medicalSummaryChips(m);
   if (chips.length === 0 && m.disclaimerAccepted) {
     return (
-      <div className="rounded-xl border border-[var(--line)] bg-white/60 px-3 py-2 text-xs text-[var(--muted)]">
+      <div className="banner-neutral px-3 py-2 text-xs">
         Không khai báo bệnh nền đặc biệt · vẫn dừng nếu đau bất thường. Đây không
         phải tư vấn y tế.
       </div>
@@ -17,16 +17,14 @@ export function MedicalBanner({ profile }: { profile: Profile }) {
 
   return (
     <div
-      className={`rounded-xl border px-3 py-3 text-sm ${
-        needsClearance || m.hasRedFlags
-          ? "border-[var(--danger)]/40 bg-[#fde8e4]"
-          : "border-[var(--warn)]/30 bg-[#fff6e8]"
+      className={`px-3 py-3 text-sm ${
+        needsClearance || m.hasRedFlags ? "banner-danger" : "banner-warn"
       }`}
     >
-      <p className="font-semibold text-[var(--ink)]">Ràng buộc sức khỏe</p>
+      <p className="font-semibold text-[var(--text)]">Ràng buộc sức khỏe</p>
       <div className="mt-2 flex flex-wrap gap-1">
         {chips.map((c) => (
-          <span key={c} className="chip !bg-white/80 !text-[var(--ink)]">
+          <span key={c} className="chip chip-soft">
             {c}
           </span>
         ))}

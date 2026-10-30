@@ -5,7 +5,7 @@ export function MealCard({ meal }: { meal: MealItem }) {
     <article className="card !p-4">
       <div className="flex items-start gap-3">
         <div
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent-soft)] to-[var(--sand)] text-2xl"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[var(--elevated)] text-2xl ring-1 ring-[var(--line)]"
           aria-hidden
         >
           {meal.emoji}
@@ -36,7 +36,7 @@ export function MealCard({ meal }: { meal: MealItem }) {
             {meal.allergens.map((a) => (
               <span
                 key={a}
-                className="chip !bg-[#fde8e4] !text-[var(--danger)]"
+                className="chip chip-hot"
               >
                 dị ứng: {a}
               </span>
