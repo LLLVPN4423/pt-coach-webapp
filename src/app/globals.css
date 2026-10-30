@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1a2e28;
+  --muted: #5c6f68;
+  --sand: #f3efe6;
+  --surface: #faf8f3;
+  --line: #ddd6c8;
+  --accent: #0f6b5c;
+  --accent-soft: #d8eee8;
+  --warn: #9a5b1a;
+  --danger: #8b2e2e;
+  --ok: #1f6b3a;
+  --background: var(--sand);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, #d8eee880, transparent),
+    radial-gradient(ellipse 60% 40% at 100% 0%, #e8dfc880, transparent),
+    var(--sand);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+  min-height: 100%;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 1px 0 rgba(26, 46, 40, 0.04);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.925rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #f7fffc;
+}
+
+.btn-primary:hover {
+  background: #0c574b;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.btn-ghost:hover {
+  background: var(--sand);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.field input,
+.field select,
+.field textarea {
+  border: 1px solid var(--line);
+  border-radius: 0.65rem;
+  background: #fff;
+  padding: 0.55rem 0.75rem;
+  color: var(--ink);
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
