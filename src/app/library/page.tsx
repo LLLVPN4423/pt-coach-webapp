@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { IconDumbbell, IconUtensils } from "@/components/icons";
 import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
-import { EXERCISES, searchExercises } from "@/lib/exercises";
+import {
+  EQUIPMENT_FILTERS,
+  EXERCISES,
+  MUSCLE_FILTERS,
+  searchExercises,
+} from "@/lib/exercises";
 import { FOODS, fetchOffProduct } from "@/lib/foods";
 
 type Tab = "exercises" | "foods" | "off";
@@ -15,6 +20,10 @@ export default function LibraryPage() {
   const { hydrated, profile } = usePtStore();
   const [tab, setTab] = useState<Tab>("exercises");
   const [q, setQ] = useState("");
+  const [muscle, setMuscle] = useState("all");
+  const [equipment, setEquipment] = useState("all");
+  const [foodGroup, setFoodGroup] = useState("all");
+  const [limit, setLimit] = useState(48);
   const [barcode, setBarcode] = useState("");
   const [offLoading, setOffLoading] = useState(false);
   const [offResult, setOffResult] = useState<Awaited<
@@ -26,48 +35,39 @@ export default function LibraryPage() {
     if (hydrated && !profile) router.replace("/onboarding");
   }, [hydrated, profile, router]);
 
-  const exercises = useMemo(() => searchExercises(q, 40), [q]);
+  const exercises = useMemo(
+    () => searchExercises(q, limit, { muscle, equipment }),
+    [q, limit, muscle, equipment],
+  );
+  const foodGroups = useMemo(
+    () => ["all", ...Array.from(new Set(FOODS.map((f) => f.group)))],
+    [],
+  );
   const foods = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return FOODS.slice(0, 40);
-    return FOODS.filter(
-      (f) =>
+    return FOODS.filter((f) => {
+      if (foodGroup !== "all" && f.group !== foodGroup) return false;
+      if (!s) return true;
+      return (
         f.name.toLowerCase().includes(s) ||
         f.nameEn.toLowerCase().includes(s) ||
-        f.group.includes(s) ||
-        f.tags.some((t) => t.includes(s)),
-    ).slice(0, 40);
-  }, [q]);
+        f.tags.some((t) => t.includes(s))
+      );
+    }).slice(0, limit);
+  }, [q, foodGroup, limit]);
 
-  async function lookupOff() {
-    setOffErr("");
-    setOffResult(null);
-    setOffLoading(true);
-    try {
-      const r = await fetchOffProduct(barcode);
-      if (!r) setOffErr("Không tìm thấy mã này trên Open Food Facts.");
-      else setOffResult(r);
-    } catch {
-      setOffErr("Lỗi mạng khi gọi Open Food Facts.");
-    } finally {
-      setOffLoading(false);
-    }
-  }
-
-  if (!hydrated || !profile) {
-    return <PageGate ready={false} />;
-  }
+  if (!hydrated || !profile) return <PageGate ready={false} />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rise">
       <div>
-        <p className="chip">Open data</p>
+        <p className="chip">Open data · 3D GIF</p>
         <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight">
           Thư viện
         </h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          {EXERCISES.length} bài tập (free-exercise-db + YouTube form) ·{" "}
-          {FOODS.length} thực phẩm · Open Food Facts barcode
+          {EXERCISES.length} bài tập (Gym Visual 3D GIF) · {FOODS.length} thực
+          phẩm · Open Food Facts
         </p>
       </div>
 
@@ -83,7 +83,10 @@ export default function LibraryPage() {
             key={id}
             type="button"
             className={`btn ${tab === id ? "btn-primary" : "btn-ghost"}`}
-            onClick={() => setTab(id)}
+            onClick={() => {
+              setTab(id);
+              setLimit(48);
+            }}
           >
             <Icon size={14} /> {label}
           </button>
@@ -91,131 +94,197 @@ export default function LibraryPage() {
       </div>
 
       {tab !== "off" && (
-        <input
-          className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
-          placeholder={
-            tab === "exercises"
-              ? "Tìm bài tập (tên, cơ, dụng cụ)…"
-              : "Tìm thực phẩm (tên, nhóm)…"
-          }
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+        <>
+          <input
+            className="w-full rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+            placeholder={
+              tab === "exercises" ? "Tìm bài tập…" : "Tìm thực phẩm…"
+            }
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          {tab === "exercises" && (
+            <div className="flex flex-wrap gap-2">
+              {MUSCLE_FILTERS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    muscle === m
+                      ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                      : "border-[var(--line)] bg-white"
+                  }`}
+                  onClick={() => setMuscle(m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === "exercises" && (
+            <div className="flex flex-wrap gap-2">
+              {EQUIPMENT_FILTERS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    equipment === m
+                      ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                      : "border-[var(--line)] bg-white"
+                  }`}
+                  onClick={() => setEquipment(m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === "foods" && (
+            <div className="flex flex-wrap gap-2">
+              {foodGroups.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    foodGroup === g
+                      ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                      : "border-[var(--line)] bg-white"
+                  }`}
+                  onClick={() => setFoodGroup(g)}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {tab === "exercises" && (
-        <div className="grid gap-2 sm:grid-cols-2">
-          {exercises.map((e) => (
-            <article
-              key={e.id}
-              className="flex gap-3 rounded-xl border border-[var(--line)] bg-white/70 p-2.5"
+        <>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {exercises.map((e) => (
+              <article
+                key={e.id}
+                className="flex gap-3 rounded-2xl border border-[var(--line)] bg-white/80 p-2"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={e.gifUrl || e.imageUrl}
+                  alt=""
+                  className="h-20 w-20 rounded-xl bg-white object-contain"
+                  loading="lazy"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold leading-snug">{e.name}</p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {e.muscle} · {e.equipment}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[var(--muted)]">
+                    {(e.primaryMuscles || []).slice(0, 2).join(", ")}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+          {exercises.length >= limit && (
+            <button
+              type="button"
+              className="btn btn-ghost w-full"
+              onClick={() => setLimit((n) => n + 48)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={e.imageUrl}
-                alt=""
-                className="h-16 w-16 rounded-lg object-cover bg-[var(--sand)]"
-                loading="lazy"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold leading-snug">{e.name}</p>
-                <p className="text-xs text-[var(--muted)]">
-                  {e.muscle} · {e.equipment} · {e.level}
-                </p>
-                <a
-                  href={e.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-1 inline-block text-xs font-semibold text-[var(--accent)]"
-                >
-                  Clip form →
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
+              Xem thêm (+48)
+            </button>
+          )}
+        </>
       )}
 
       {tab === "foods" && (
-        <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
-          <table className="w-full min-w-[520px] text-left text-sm">
-            <thead className="bg-[var(--sand)] text-xs text-[var(--muted)]">
-              <tr>
-                <th className="px-3 py-2 font-medium">Tên</th>
-                <th className="px-3 py-2 font-medium">Nhóm</th>
-                <th className="px-3 py-2 font-medium">Khẩu phần</th>
-                <th className="px-3 py-2 font-medium">kcal</th>
-                <th className="px-3 py-2 font-medium">P</th>
-                <th className="px-3 py-2 font-medium">C</th>
-                <th className="px-3 py-2 font-medium">F</th>
-              </tr>
-            </thead>
-            <tbody>
-              {foods.map((f) => (
-                <tr key={f.id} className="border-t border-[var(--line)]">
-                  <td className="px-3 py-2">
-                    <p className="font-medium">{f.name}</p>
-                    <p className="text-xs text-[var(--muted)]">{f.nameEn}</p>
-                  </td>
-                  <td className="px-3 py-2 text-[var(--muted)]">{f.group}</td>
-                  <td className="px-3 py-2">{f.servingG}g</td>
-                  <td className="px-3 py-2">{f.kcal}</td>
-                  <td className="px-3 py-2">{f.protein}</td>
-                  <td className="px-3 py-2">{f.carbs}</td>
-                  <td className="px-3 py-2">{f.fat}</td>
+        <>
+          <div className="overflow-x-auto rounded-xl border border-[var(--line)]">
+            <table className="w-full min-w-[520px] text-left text-sm">
+              <thead className="bg-[var(--sand)] text-xs text-[var(--muted)]">
+                <tr>
+                  <th className="px-3 py-2">Tên</th>
+                  <th className="px-3 py-2">Nhóm</th>
+                  <th className="px-3 py-2">kcal</th>
+                  <th className="px-3 py-2">P</th>
+                  <th className="px-3 py-2">C</th>
+                  <th className="px-3 py-2">F</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {foods.map((f) => (
+                  <tr key={f.id} className="border-t border-[var(--line)]">
+                    <td className="px-3 py-2 font-medium">{f.name}</td>
+                    <td className="px-3 py-2 text-[var(--muted)]">{f.group}</td>
+                    <td className="px-3 py-2">{f.kcal}</td>
+                    <td className="px-3 py-2">{f.protein}</td>
+                    <td className="px-3 py-2">{f.carbs}</td>
+                    <td className="px-3 py-2">{f.fat}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {foods.length >= limit && (
+            <button
+              type="button"
+              className="btn btn-ghost w-full"
+              onClick={() => setLimit((n) => n + 48)}
+            >
+              Xem thêm
+            </button>
+          )}
+        </>
       )}
 
       {tab === "off" && (
         <section className="card space-y-3">
-          <h2 className="font-semibold">Open Food Facts (API miễn phí)</h2>
-          <p className="text-sm text-[var(--muted)]">
-            Nhập mã vạch sản phẩm để xem kcal / macro / 100g. Dữ liệu cộng đồng —
-            kiểm tra lại nhãn khi cần chính xác.
-          </p>
+          <h2 className="font-semibold">Open Food Facts</h2>
           <div className="flex flex-wrap gap-2">
             <input
-              className="min-w-[200px] flex-1 rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
-              placeholder="Mã vạch (VD: 3017620422003)"
+              className="min-w-[200px] flex-1 rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-sm"
+              placeholder="Mã vạch"
               value={barcode}
               onChange={(e) => setBarcode(e.target.value)}
             />
             <button
               type="button"
               className="btn btn-primary"
-              disabled={offLoading || barcode.replace(/\D/g, "").length < 8}
-              onClick={lookupOff}
+              disabled={offLoading}
+              onClick={async () => {
+                setOffErr("");
+                setOffResult(null);
+                setOffLoading(true);
+                try {
+                  const r = await fetchOffProduct(barcode);
+                  if (!r) setOffErr("Không tìm thấy.");
+                  else setOffResult(r);
+                } catch {
+                  setOffErr("Lỗi mạng.");
+                } finally {
+                  setOffLoading(false);
+                }
+              }}
             >
-              {offLoading ? "Đang tra…" : "Tra cứu"}
+              Tra cứu
             </button>
           </div>
           {offErr && <p className="text-sm text-[var(--danger)]">{offErr}</p>}
           {offResult && (
-            <div className="flex gap-3 rounded-xl bg-[var(--sand)] p-3">
-              {offResult.image && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={offResult.image}
-                  alt=""
-                  className="h-16 w-16 rounded-lg object-cover"
-                />
-              )}
-              <div>
-                <p className="font-semibold">{offResult.name}</p>
-                <p className="text-sm text-[var(--muted)]">
-                  /100g · kcal {offResult.kcal ?? "—"} · P{" "}
-                  {offResult.protein ?? "—"}g · C {offResult.carbs ?? "—"}g · F{" "}
-                  {offResult.fat ?? "—"}g
-                </p>
-              </div>
-            </div>
+            <p className="text-sm">
+              <span className="font-semibold">{offResult.name}</span> — kcal{" "}
+              {offResult.kcal ?? "—"} /100g
+            </p>
           )}
         </section>
       )}
+
+      <p className="text-[10px] text-[var(--muted)]">
+        Animation © Gym visual (qua exercises-dataset) · chỉ dùng cá nhân /
+        educational · không thay thế tư vấn y tế
+      </p>
     </div>
   );
 }

@@ -15,7 +15,15 @@ import type {
   Profile,
   Sex,
 } from "@/lib/types";
+import {
+  emptyFemaleCycle,
+  emptyLifeContext,
+  emptyMaleReadiness,
+  SCHEDULE_LABELS,
+  VENUE_LABELS,
+} from "@/lib/context";
 import { CONDITION_LABELS, GOAL_LABELS, JOINT_LABELS } from "@/lib/types";
+import type { LifeContext } from "@/lib/types";
 
 const GOALS = (Object.keys(GOAL_LABELS) as Goal[]).map((id) => ({
   id,
@@ -42,6 +50,9 @@ export default function OnboardingPage() {
   const [sessionsPerDay, setSessionsPerDay] = useState(1);
   const [sessionMinutes, setSessionMinutes] = useState(45);
   const [equipment, setEquipment] = useState("Phòng gym / tạ đơn");
+  const [life, setLife] = useState<LifeContext>(emptyLifeContext());
+  const [femaleCycle, setFemaleCycle] = useState(emptyFemaleCycle());
+  const [maleReadiness, setMaleReadiness] = useState(emptyMaleReadiness());
   const [medical, setMedical] = useState<MedicalFlags>(emptyMedical());
 
   const [weightKg, setWeight] = useState(70);
@@ -95,6 +106,9 @@ export default function OnboardingPage() {
       sessionMinutes,
       availableEquipment: equipment,
       medical,
+      life,
+      femaleCycle,
+      maleReadiness,
       createdAt: now,
       updatedAt: now,
     };
@@ -269,6 +283,246 @@ export default function OnboardingPage() {
                 placeholder="Bodyweight / tạ đơn / phòng gym…"
               />
             </div>
+
+            <div className="field sm:col-span-2">
+              <label>Hoàn cảnh sống</label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(SCHEDULE_LABELS) as LifeContext["scheduleType"][]).map(
+                  (id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setLife((l) => ({ ...l, scheduleType: id }))}
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
+                        life.scheduleType === id
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          : "border-[var(--line)] bg-white"
+                      }`}
+                    >
+                      {SCHEDULE_LABELS[id]}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+            <div className="field sm:col-span-2">
+              <label>Nơi tập chính</label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(VENUE_LABELS) as LifeContext["venue"][]).map((id) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setLife((l) => ({ ...l, venue: id }))}
+                    className={`rounded-full border px-2.5 py-1 text-xs ${
+                      life.venue === id
+                        ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                        : "border-[var(--line)] bg-white"
+                    }`}
+                  >
+                    {VENUE_LABELS[id]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <label>Ngân sách ăn</label>
+              <select
+                value={life.foodBudget}
+                onChange={(e) =>
+                  setLife((l) => ({
+                    ...l,
+                    foodBudget: e.target.value as LifeContext["foodBudget"],
+                  }))
+                }
+              >
+                <option value="low">Eo hẹp</option>
+                <option value="mid">Trung bình</option>
+                <option value="flexible">Linh hoạt</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>Kiểu ăn</label>
+              <select
+                value={life.dietPattern}
+                onChange={(e) =>
+                  setLife((l) => ({
+                    ...l,
+                    dietPattern: e.target.value as LifeContext["dietPattern"],
+                  }))
+                }
+              >
+                <option value="none">Không đặc biệt</option>
+                <option value="vegetarian">Chay trứng sữa</option>
+                <option value="vegan">Thuần chay</option>
+                <option value="lactose_free">Hạn chế sữa</option>
+                <option value="gluten_free">Hạn chế gluten</option>
+              </select>
+            </div>
+            <div className="sm:col-span-2 flex flex-wrap gap-3 text-sm">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={life.travelsOften}
+                  onChange={(e) =>
+                    setLife((l) => ({ ...l, travelsOften: e.target.checked }))
+                  }
+                />
+                Hay đi công tác
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={life.examOrDeadlineMode}
+                  onChange={(e) =>
+                    setLife((l) => ({
+                      ...l,
+                      examOrDeadlineMode: e.target.checked,
+                    }))
+                  }
+                />
+                Mùa thi / deadline
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={life.physicalJob}
+                  onChange={(e) =>
+                    setLife((l) => ({ ...l, physicalJob: e.target.checked }))
+                  }
+                />
+                Việc chân tay
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={life.heatHumidityAware}
+                  onChange={(e) =>
+                    setLife((l) => ({
+                      ...l,
+                      heatHumidityAware: e.target.checked,
+                    }))
+                  }
+                />
+                Nóng ẩm VN
+              </label>
+            </div>
+
+            {sex === "female" && (
+              <div className="sm:col-span-2 space-y-2 rounded-2xl border border-[var(--line)] bg-[var(--sand)] p-3">
+                <label className="flex items-center gap-2 text-sm font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={femaleCycle.cycleTrackingEnabled}
+                    onChange={(e) =>
+                      setFemaleCycle((f) => ({
+                        ...f,
+                        cycleTrackingEnabled: e.target.checked,
+                      }))
+                    }
+                  />
+                  Theo dõi chu kỳ / triệu chứng (tuỳ chọn)
+                </label>
+                {femaleCycle.cycleTrackingEnabled && (
+                  <>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="field">
+                        <label>Độ dài chu kỳ TB</label>
+                        <input
+                          type="number"
+                          min={21}
+                          max={40}
+                          value={femaleCycle.avgCycleLength}
+                          onChange={(e) =>
+                            setFemaleCycle((f) => ({
+                              ...f,
+                              avgCycleLength: Number(e.target.value),
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="field">
+                        <label>Ngày đầu kỳ gần nhất</label>
+                        <input
+                          type="date"
+                          value={femaleCycle.lastPeriodStart}
+                          onChange={(e) =>
+                            setFemaleCycle((f) => ({
+                              ...f,
+                              lastPeriodStart: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={femaleCycle.irregularOrAbsentFlag}
+                        onChange={(e) =>
+                          setFemaleCycle((f) => ({
+                            ...f,
+                            irregularOrAbsentFlag: e.target.checked,
+                          }))
+                        }
+                      />
+                      Chu kỳ rất không đều / mất kinh kéo dài (gợi ý khám)
+                    </label>
+                    <p className="text-[10px] text-[var(--muted)]">
+                      Điều chỉnh theo triệu chứng — không ép volume theo pha
+                      hormone.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {sex === "male" && (
+              <div className="sm:col-span-2 space-y-2 rounded-2xl border border-[var(--line)] bg-[var(--sand)] p-3">
+                <label className="flex items-center gap-2 text-sm font-semibold">
+                  <input
+                    type="checkbox"
+                    checked={maleReadiness.readinessTrackingEnabled}
+                    onChange={(e) =>
+                      setMaleReadiness((m) => ({
+                        ...m,
+                        readinessTrackingEnabled: e.target.checked,
+                      }))
+                    }
+                  />
+                  Theo dõi readiness / phục hồi (tuỳ chọn)
+                </label>
+                {maleReadiness.readinessTrackingEnabled && (
+                  <>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={maleReadiness.prioritizeRecovery}
+                        onChange={(e) =>
+                          setMaleReadiness((m) => ({
+                            ...m,
+                            prioritizeRecovery: e.target.checked,
+                          }))
+                        }
+                      />
+                      Ưu tiên ngủ & phục hồi hơn volume
+                    </label>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={maleReadiness.chronicFatigueFlag}
+                        onChange={(e) =>
+                          setMaleReadiness((m) => ({
+                            ...m,
+                            chronicFatigueFlag: e.target.checked,
+                          }))
+                        }
+                      />
+                      Hay mệt / ăn thiếu kéo dài
+                    </label>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </section>
       )}

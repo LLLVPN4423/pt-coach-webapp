@@ -1,7 +1,6 @@
 /**
- * Exercise library backed by free-exercise-db (open dataset + GitHub-hosted images).
- * https://github.com/yuhonas/free-exercise-db
- * Video: YouTube search-embed (no API key) + results link.
+ * Exercise library — 3D GIF animations from ExerciseDB (personal/non-commercial).
+ * https://oss.exercisedb.dev — attribute AscendAPI / ExerciseDB.
  */
 import catalog from "@/data/exercises-catalog.json";
 
@@ -11,17 +10,17 @@ export interface ExerciseTemplate {
   muscle: string;
   primaryMuscles?: string[];
   secondaryMuscles?: string[];
+  bodyParts?: string[];
   equipment: string;
-  level: "beginner" | "intermediate" | string;
+  equipmentRaw?: string;
+  level: string;
   category?: string;
   jointFriendly: boolean;
   lowImpact: boolean;
   avoidJoints?: string[];
   cues: string[];
   imageUrl: string;
-  imageUrlAlt?: string;
-  videoUrl: string;
-  videoEmbedUrl?: string;
+  gifUrl?: string;
 }
 
 export const EXERCISES = catalog as ExerciseTemplate[];
@@ -30,22 +29,43 @@ export function getExercise(id: string): ExerciseTemplate | undefined {
   return EXERCISES.find((e) => e.id === id);
 }
 
-export function searchExercises(q: string, limit = 20): ExerciseTemplate[] {
+export function searchExercises(
+  q: string,
+  limit = 40,
+  filters?: {
+    muscle?: string;
+    equipment?: string;
+    bodyPart?: string;
+  },
+): ExerciseTemplate[] {
   const s = q.trim().toLowerCase();
-  if (!s) return EXERCISES.slice(0, limit);
-  return EXERCISES.filter(
-    (e) =>
-      e.name.toLowerCase().includes(s) ||
-      e.muscle.includes(s) ||
-      e.equipment.includes(s) ||
-      e.category?.toLowerCase().includes(s) ||
-      e.primaryMuscles?.some((m) => m.toLowerCase().includes(s)),
-  ).slice(0, limit);
+  let pool = EXERCISES;
+  if (filters?.muscle && filters.muscle !== "all") {
+    pool = pool.filter((e) => e.muscle === filters.muscle);
+  }
+  if (filters?.equipment && filters.equipment !== "all") {
+    pool = pool.filter((e) => e.equipment === filters.equipment);
+  }
+  if (filters?.bodyPart && filters.bodyPart !== "all") {
+    pool = pool.filter((e) =>
+      e.bodyParts?.some((b) => b.toLowerCase() === filters.bodyPart!.toLowerCase()),
+    );
+  }
+  if (!s) return pool.slice(0, limit);
+  return pool
+    .filter(
+      (e) =>
+        e.name.toLowerCase().includes(s) ||
+        e.muscle.includes(s) ||
+        e.equipment.includes(s) ||
+        e.primaryMuscles?.some((m) => m.toLowerCase().includes(s)),
+    )
+    .slice(0, limit);
 }
 
 export function alternativesFor(
   ex: ExerciseTemplate,
-  opts: { avoidJoints?: string[]; lowImpact?: boolean },
+  opts: { avoidJoints?: string[]; lowImpact?: boolean; equipment?: string },
   limit = 6,
 ): ExerciseTemplate[] {
   return EXERCISES.filter((e) => {
@@ -57,6 +77,10 @@ export function alternativesFor(
       e.avoidJoints?.some((j) => opts.avoidJoints!.includes(j))
     )
       return false;
+    if (opts.equipment && opts.equipment !== "any") {
+      if (e.equipment !== opts.equipment && e.equipment !== "bodyweight")
+        return false;
+    }
     return true;
   }).slice(0, limit);
 }
@@ -67,6 +91,8 @@ export function pickByMuscle(
     jointSafe?: boolean;
     lowImpact?: boolean;
     avoidJoints?: string[];
+    equipmentPrefer?: string[];
+    bodyweightOnly?: boolean;
   },
   count: number,
 ): ExerciseTemplate[] {
@@ -77,16 +103,25 @@ export function pickByMuscle(
     pool = EXERCISES.filter(
       (e) =>
         e.category === "cardio" ||
-        /walk|bike|cycle|run|march|cardio|jumping jack/i.test(e.name),
+        e.muscle === "cardio" ||
+        /walk|bike|cycle|run|march|cardio|jumping jack|burpee/i.test(e.name),
     );
   }
   if (muscle === "core") {
     pool = EXERCISES.filter(
       (e) =>
         e.muscle === "core" ||
-        e.primaryMuscles?.includes("abdominals") ||
+        e.primaryMuscles?.some((m) => /abdom/i.test(m)) ||
         /plank|crunch|sit-up|dead bug|hollow/i.test(e.name),
     );
+  }
+  if (opts.bodyweightOnly) {
+    pool = pool.filter((e) => e.equipment === "bodyweight");
+  } else if (opts.equipmentPrefer?.length) {
+    const pref = pool.filter((e) =>
+      opts.equipmentPrefer!.includes(e.equipment),
+    );
+    if (pref.length >= count) pool = pref;
   }
   if (opts.jointSafe) pool = pool.filter((e) => e.jointFriendly);
   if (opts.lowImpact) pool = pool.filter((e) => e.lowImpact);
@@ -111,7 +146,26 @@ export function pickByMuscle(
   return out;
 }
 
-export function youtubeEmbedFor(name: string): string {
-  const q = `${name} exercise proper form tutorial`;
-  return `https://www.youtube.com/embed?listType=search&list=${encodeURIComponent(q)}`;
-}
+export const MUSCLE_FILTERS = [
+  "all",
+  "chest",
+  "back",
+  "shoulders",
+  "arms",
+  "legs",
+  "posterior",
+  "core",
+  "cardio",
+  "full",
+] as const;
+
+export const EQUIPMENT_FILTERS = [
+  "all",
+  "bodyweight",
+  "dumbbell",
+  "barbell",
+  "machine",
+  "band",
+  "kettlebell",
+  "any",
+] as const;

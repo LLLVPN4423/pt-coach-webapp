@@ -2,11 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ExerciseSet } from "@/lib/types";
-import {
-  alternativesFor,
-  getExercise,
-  youtubeEmbedFor,
-} from "@/lib/exercises";
+import { alternativesFor, getExercise } from "@/lib/exercises";
 import { MuscleMap } from "@/components/MuscleMap";
 import { IconDumbbell, IconRefresh } from "@/components/icons";
 
@@ -17,6 +13,7 @@ export function ExerciseCard({
   onSwap,
   avoidJoints,
   lowImpact,
+  deload,
 }: {
   exercise: ExerciseSet;
   compact?: boolean;
@@ -24,23 +21,26 @@ export function ExerciseCard({
   onSwap?: (dayIndex: number, oldId: string, next: ExerciseSet) => void;
   avoidJoints?: string[];
   lowImpact?: boolean;
+  deload?: boolean;
 }) {
   const [imgOk, setImgOk] = useState(true);
   const [openSwap, setOpenSwap] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
 
   const tpl = getExercise(exercise.id);
   const primary = exercise.primaryMuscles ?? tpl?.primaryMuscles ?? [];
   const secondary = exercise.secondaryMuscles ?? tpl?.secondaryMuscles ?? [];
-  const embed =
-    exercise.videoEmbedUrl ||
-    tpl?.videoEmbedUrl ||
-    youtubeEmbedFor(exercise.name);
+  const gif = exercise.gifUrl || exercise.imageUrl || tpl?.gifUrl || tpl?.imageUrl;
+  const sets = deload ? Math.max(1, exercise.sets - 1) : exercise.sets;
 
   const alts = useMemo(() => {
     if (!tpl) return [];
-    return alternativesFor(tpl, { avoidJoints, lowImpact }, 5);
-  }, [tpl, avoidJoints, lowImpact]);
+    return alternativesFor(
+      tpl,
+      { avoidJoints, lowImpact: lowImpact || deload },
+      5,
+    );
+  }, [tpl, avoidJoints, lowImpact, deload]);
 
   const canSwap =
     typeof dayIndex === "number" && typeof onSwap === "function" && alts.length > 0;
@@ -50,16 +50,16 @@ export function ExerciseCard({
       <div className="flex gap-3">
         <button
           type="button"
-          className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-[var(--ink-faint)] sm:h-28 sm:w-28"
-          onClick={() => setShowVideo((v) => !v)}
-          title="Xem clip hướng dẫn"
+          className="relative h-28 w-28 shrink-0 overflow-hidden rounded-2xl bg-[var(--ink-faint)] sm:h-32 sm:w-32"
+          onClick={() => setLightbox(true)}
+          title="Xem animation 3D"
         >
-          {exercise.imageUrl && imgOk ? (
+          {gif && imgOk ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={exercise.imageUrl}
+              src={gif}
               alt={exercise.name}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain bg-white"
               loading="lazy"
               onError={() => setImgOk(false)}
             />
@@ -68,8 +68,8 @@ export function ExerciseCard({
               <IconDumbbell size={28} />
             </div>
           )}
-          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
-            ▶ Clip form
+          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent px-1.5 py-1 text-[10px] font-semibold text-white">
+            3D GIF
           </span>
         </button>
 
@@ -86,24 +86,18 @@ export function ExerciseCard({
               </h3>
             </div>
             <p className="shrink-0 rounded-lg bg-[var(--sand)] px-2 py-1 text-sm font-semibold tabular-nums">
-              {exercise.sets}×{exercise.reps}
-              {exercise.restSec > 0 ? (
-                <span className="font-normal text-[var(--muted)]">
-                  {" "}
-                  · {exercise.restSec}s
+              {sets}×{exercise.reps}
+              {deload ? (
+                <span className="ml-1 text-[10px] font-bold text-[var(--warn)]">
+                  nhẹ
                 </span>
               ) : null}
             </p>
           </div>
 
           {!compact && (
-            <MuscleMap
-              primary={primary}
-              secondary={secondary}
-              className="mt-2"
-            />
+            <MuscleMap primary={primary} secondary={secondary} className="mt-2" />
           )}
-
           {compact && primary.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
               {primary.slice(0, 3).map((m) => (
@@ -116,34 +110,23 @@ export function ExerciseCard({
 
           {exercise.cues && exercise.cues.length > 0 && !compact && (
             <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]">
-              {exercise.cues.slice(0, 3).map((c) => (
+              {exercise.cues.slice(0, 2).map((c) => (
                 <li key={c}>• {c}</li>
               ))}
             </ul>
           )}
-
           {exercise.notes && (
             <p className="mt-1 text-xs text-[var(--warn)]">{exercise.notes}</p>
           )}
 
-          <div className="mt-2 flex flex-wrap items-center gap-3">
+          <div className="mt-2 flex flex-wrap gap-3">
             <button
               type="button"
               className="text-xs font-semibold text-[var(--accent)]"
-              onClick={() => setShowVideo((v) => !v)}
+              onClick={() => setLightbox(true)}
             >
-              {showVideo ? "Ẩn clip" : "Xem hướng dẫn video"}
+              Phóng animation
             </button>
-            {exercise.videoUrl && (
-              <a
-                href={exercise.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs font-semibold text-[var(--muted)] underline-offset-2 hover:underline"
-              >
-                Mở YouTube ↗
-              </a>
-            )}
             {canSwap && (
               <button
                 type="button"
@@ -158,30 +141,36 @@ export function ExerciseCard({
         </div>
       </div>
 
-      {showVideo && (
-        <div className="mt-3 overflow-hidden rounded-2xl border border-[var(--line)] bg-black">
-          <div className="aspect-video w-full">
-            <iframe
-              title={`Hướng dẫn: ${exercise.name}`}
-              src={embed}
-              className="h-full w-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-            />
+      {lightbox && gif && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setLightbox(false)}
+          role="presentation"
+        >
+          <div
+            className="max-h-[90vh] max-w-lg overflow-auto rounded-2xl bg-white p-3"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={gif} alt={exercise.name} className="w-full object-contain" />
+            <p className="mt-2 text-center text-sm font-semibold">{exercise.name}</p>
+            <p className="text-center text-[10px] text-[var(--muted)]">
+              3D workout animation · ExerciseDB (personal use) · AscendAPI
+            </p>
+            <button
+              type="button"
+              className="btn btn-ghost mt-2 w-full"
+              onClick={() => setLightbox(false)}
+            >
+              Đóng
+            </button>
           </div>
-          <p className="bg-[var(--ink)] px-3 py-1.5 text-[10px] text-white/70">
-            Clip từ YouTube (tìm form đúng) · ảnh minh họa free-exercise-db · sơ đồ
-            cơ là schematic, không phải scan 3D y khoa
-          </p>
         </div>
       )}
 
       {openSwap && canSwap && (
         <div className="mt-3 space-y-1.5 border-t border-[var(--line)] pt-2">
-          <p className="text-xs text-[var(--muted)]">
-            Thay thế cùng nhóm cơ ({alts.length} gợi ý)
-          </p>
           {alts.map((a) => (
             <button
               key={a.id}
@@ -198,26 +187,24 @@ export function ExerciseCard({
                   cues: a.cues,
                   avoidIf: a.avoidJoints,
                   imageUrl: a.imageUrl,
-                  imageUrlAlt: a.imageUrlAlt,
-                  videoUrl: a.videoUrl,
-                  videoEmbedUrl: a.videoEmbedUrl,
+                  gifUrl: a.gifUrl,
                   muscle: a.muscle,
                   primaryMuscles: a.primaryMuscles,
                   secondaryMuscles: a.secondaryMuscles,
                   sessionBlock: exercise.sessionBlock,
+                  equipment: a.equipment,
                 });
                 setOpenSwap(false);
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={a.imageUrl}
+                src={a.gifUrl || a.imageUrl}
                 alt=""
-                className="h-9 w-9 rounded-lg object-cover"
+                className="h-10 w-10 rounded-lg object-contain bg-white"
                 loading="lazy"
               />
               <span className="min-w-0 flex-1 truncate">{a.name}</span>
-              <span className="text-xs text-[var(--muted)]">{a.equipment}</span>
             </button>
           ))}
         </div>

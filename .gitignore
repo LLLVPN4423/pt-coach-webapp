@@ -40,5 +40,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# bulky open-data raw dumps (rebuild via npm run build:data)
+# bulky open-data raw dumps (rebuild via npm run build:data / fetch-gymvisual)
 src/data/exercises-raw.json
+src/data/exercisedb-raw.json
+src/data/gymvisual-exercises.json
+src/data/edb-*.json
+src/data/gh-*.json
+src/data/fed-check.json
+src/data/hv-ex.json
+src/data/bodyiq-raw.json

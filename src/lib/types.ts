@@ -38,7 +38,6 @@ export type MedicalCondition =
   | "dizziness"
   | "eating_disorder_history";
 
-/** Richer medical profile — inspired by NTC / Move With Us questionnaires. */
 export interface MedicalFlags {
   conditions: MedicalCondition[];
   jointZones: JointZone[];
@@ -46,12 +45,9 @@ export interface MedicalFlags {
   cardioNotes: string;
   medicationNotes: string;
   otherNotes: string;
-  /** User confirms plan is not medical advice */
   disclaimerAccepted: boolean;
-  /** Pain at rest / chest pain / unexplained dizziness → recommend doctor first */
   hasRedFlags: boolean;
   redFlagNotes: string;
-  /** Cleared by clinician for exercise (if conditions present) */
   clinicianCleared: boolean;
 }
 
@@ -64,22 +60,67 @@ export interface InBodyMetrics {
   measuredAt: string;
 }
 
+/** Life / circumstance prefs affecting plan build + daily soft-mod. */
+export interface LifeContext {
+  scheduleType:
+    | "office_9_5"
+    | "shift"
+    | "student"
+    | "freelance"
+    | "caregiver";
+  preferredSlots: ("morning" | "lunch" | "evening")[];
+  maxSessionMin?: number;
+  venue: "gym" | "home" | "outdoor" | "hotel_travel";
+  equipmentTags: string[];
+  travelsOften: boolean;
+  examOrDeadlineMode: boolean;
+  physicalJob: boolean;
+  typicalSleepHours: number;
+  baselineStress: number;
+  foodBudget: "low" | "mid" | "flexible";
+  dietPattern:
+    | "none"
+    | "vegetarian"
+    | "vegan"
+    | "lactose_free"
+    | "gluten_free";
+  eatingWindow: "normal" | "skip_breakfast" | "intermittent_soft";
+  heatHumidityAware: boolean;
+  caregivingLoad: "none" | "light" | "heavy";
+  temporaryFlags: string[];
+  contextNote: string;
+}
+
+export interface FemaleCyclePrefs {
+  cycleTrackingEnabled: boolean;
+  avgCycleLength: number;
+  lastPeriodStart: string;
+  usesHormonalContraceptive: boolean;
+  commonSymptoms: string[];
+  irregularOrAbsentFlag: boolean;
+}
+
+export interface MaleReadinessPrefs {
+  readinessTrackingEnabled: boolean;
+  prioritizeRecovery: boolean;
+  chronicFatigueFlag: boolean;
+}
+
 export interface Profile {
   name: string;
   age: number;
   sex: Sex;
   goal: Goal;
-  /** Free-text focus: e.g. giảm eo, tăng bench, chạy 5k */
   goalNote: string;
   activity: ActivityLevel;
-  /** Training days per week (1–7) */
   daysPerWeek: number;
-  /** Sessions on a training day (1–2) */
   sessionsPerDay: number;
-  /** Target minutes per session */
   sessionMinutes: number;
   availableEquipment: string;
   medical: MedicalFlags;
+  life: LifeContext;
+  femaleCycle?: FemaleCyclePrefs;
+  maleReadiness?: MaleReadinessPrefs;
   createdAt: string;
   updatedAt: string;
 }
@@ -103,16 +144,15 @@ export interface ExerciseSet {
   avoidIf?: string[];
   imageUrl?: string;
   imageUrlAlt?: string;
+  /** 3D workout GIF (ExerciseDB) */
   gifUrl?: string;
-  /** YouTube search results page */
   videoUrl?: string;
-  /** YouTube embed (search playlist) for in-app player */
   videoEmbedUrl?: string;
   muscle?: string;
   primaryMuscles?: string[];
   secondaryMuscles?: string[];
-  /** Buổi 1 / Buổi 2 when sessionsPerDay > 1 */
   sessionBlock?: 1 | 2;
+  equipment?: string;
 }
 
 export interface WorkoutDay {
@@ -127,7 +167,6 @@ export interface MealItem {
   name: string;
   items: string[];
   approxKcal?: number;
-  /** Visual hint */
   emoji: string;
   tags: string[];
   allergens: string[];
@@ -152,7 +191,6 @@ export interface TrainingPlan {
   createdAt: string;
   rationale: string;
   ageBand: AgeBand;
-  /** Snapshot of schedule prefs used to build this plan */
   schedule: {
     goal: Goal;
     goalNote: string;
@@ -161,6 +199,10 @@ export interface TrainingPlan {
     sessionMinutes: number;
     weeklyMinutes: number;
   };
+  contextSummary?: string;
+  contextNotes?: string[];
+  sexNotes?: string[];
+  mediaVersion?: number;
   workoutDays: WorkoutDay[];
   nutrition: NutritionPlan;
   medicalSummary: string[];
@@ -169,10 +211,22 @@ export interface TrainingPlan {
 export interface DayLog {
   date: string;
   workoutDone?: boolean;
+  /** Did a lighter/deload version */
+  workoutAdjusted?: boolean;
   nutritionOnTrack?: boolean;
   waterGlasses?: number;
   rpe?: number;
   notes?: string;
+  sleepHours?: number;
+  energy1to5?: number;
+  soreness1to5?: number;
+  stress1to5?: number;
+  wantsDeloadToday?: boolean;
+  contextTags?: string[];
+  /** Female */
+  cycleDay?: number;
+  bleeding?: boolean;
+  symptoms?: string[];
 }
 
 export interface WeightEntry {
@@ -194,9 +248,13 @@ export interface AppState {
   logs: DayLog[];
   weightLog: WeightEntry[];
   settings: Settings;
+  schemaVersion?: number;
 }
 
-export const STORAGE_KEY = "pt-desk:v2";
+/** Bump when media/context schema needs regen banner */
+export const SCHEMA_VERSION = 3;
+export const MEDIA_VERSION = 3;
+export const STORAGE_KEY = "pt-desk:v3";
 
 export const CONDITION_LABELS: Record<MedicalCondition, string> = {
   hypertension: "Cao huyết áp",

@@ -9,6 +9,7 @@ import { MedicalBanner } from "@/components/MedicalBanner";
 import { PageGate } from "@/components/PageGate";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
+import { planNeedsRegen } from "@/lib/storage";
 import { GOAL_LABELS } from "@/lib/types";
 
 export default function PlanPage() {
@@ -85,17 +86,29 @@ export default function PlanPage() {
         </div>
       </section>
 
-      <p className="rounded-2xl border border-[var(--line)] bg-white/70 px-3 py-2 text-xs text-[var(--muted)]">
-        Plan cũ có thể thiếu lịch/clip mới —{" "}
-        <button
-          type="button"
-          className="font-semibold text-[var(--accent)] underline-offset-2 hover:underline"
-          onClick={regeneratePlan}
-        >
-          Sinh lại
-        </button>{" "}
-        (hoặc Cài đặt → Reset onboarding để đổi mục tiêu / lịch).
-      </p>
+      {planNeedsRegen(plan) && (
+        <p className="rounded-2xl border border-[var(--warn)]/40 bg-[#fff6e8] px-3 py-2 text-xs">
+          Plan chưa có 3D GIF / hoàn cảnh mới —{" "}
+          <button
+            type="button"
+            className="font-semibold text-[var(--accent)] underline"
+            onClick={regeneratePlan}
+          >
+            Sinh lại ngay
+          </button>
+        </p>
+      )}
+
+      {((plan.contextNotes?.length ?? 0) + (plan.sexNotes?.length ?? 0)) > 0 && (
+        <section className="card space-y-2 text-sm">
+          <h2 className="font-semibold">Vì sao plan thế này</h2>
+          <ul className="list-disc space-y-1 pl-5 text-[var(--muted)]">
+            {[...(plan.sexNotes || []), ...(plan.contextNotes || [])].map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <MedicalBanner profile={profile} />
 

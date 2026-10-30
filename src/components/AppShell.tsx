@@ -14,8 +14,9 @@ import { PtStoreProvider, usePtStore } from "@/hooks/usePtStore";
 const NAV = [
   { href: "/today", label: "Hôm nay", icon: IconHome },
   { href: "/plan", label: "Lộ trình", icon: IconDumbbell },
+  { href: "/progress", label: "Tiến độ", icon: IconActivity },
   { href: "/library", label: "Thư viện", icon: IconCalendar },
-  { href: "/body", label: "Cơ thể", icon: IconActivity },
+  { href: "/body", label: "Cơ thể", icon: IconDumbbell },
   { href: "/settings", label: "Cài đặt", icon: IconSettings },
 ];
 
@@ -69,8 +70,16 @@ function ShellInner({ children }: { children: React.ReactNode }) {
       )}
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
       {!hideNav && profile && (
-        <footer className="border-t border-[var(--line)]/60 py-3 text-center text-xs text-[var(--muted)]">
-          Công cụ cá nhân · không thay thế bác sĩ / PT chuyên nghiệp
+        <footer className="border-t border-[var(--line)]/60 px-4 py-3 text-center text-[10px] text-[var(--muted)] sm:text-xs">
+          Công cụ cá nhân · không thay thế bác sĩ / PT · GIF ©{" "}
+          <a
+            href="https://gymvisual.com/"
+            className="underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Gym visual
+          </a>
         </footer>
       )}
     </div>
