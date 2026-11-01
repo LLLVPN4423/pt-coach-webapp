@@ -25,6 +25,7 @@ import {
 } from "@/lib/context";
 import { CONDITION_LABELS, GOAL_LABELS, JOINT_LABELS } from "@/lib/types";
 import type { LifeContext } from "@/lib/types";
+import { EQUIPMENT_TAG_OPTIONS } from "@/lib/exercise-select";
 import {
   TRAINING_STYLE_BLURBS,
   TRAINING_STYLE_LABELS,
@@ -353,6 +354,38 @@ export default function OnboardingPage() {
                     {VENUE_LABELS[id]}
                   </button>
                 ))}
+              </div>
+            </div>
+            <div className="field sm:col-span-2">
+              <label>Thiết bị có sẵn</label>
+              <p className="mb-1.5 text-[11px] text-[var(--muted)]">
+                Tập nhà / ngoài trời: chọn đúng để plan ưu tiên bodyweight và ít máy.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {EQUIPMENT_TAG_OPTIONS.map((opt) => {
+                  const on = life.equipmentTags.includes(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() =>
+                        setLife((l) => ({
+                          ...l,
+                          equipmentTags: on
+                            ? l.equipmentTags.filter((t) => t !== opt.id)
+                            : [...l.equipmentTags, opt.id],
+                        }))
+                      }
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
+                        on
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          : "border-[var(--line)] bg-[var(--elevated)]"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
             <div className="field">

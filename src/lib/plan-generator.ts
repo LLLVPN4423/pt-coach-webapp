@@ -13,12 +13,15 @@ import {
   lifeContextNotes,
   sexAwareNotes,
 } from "./context";
-import { pickByMuscle } from "./exercises";
+import {
+  buildSessionPicks,
+  resolveEquipmentProfile,
+  type SelectContext,
+} from "./exercise-select";
 import { buildMealsFromFoods } from "./foods";
 import { medicalPlanNotes } from "./medical";
 import {
   distributeTrainDays,
-  rankForStyle,
   splitForStyle,
   stylePrescription,
   TRAINING_STYLE_LABELS,
@@ -72,18 +75,6 @@ function exercisesForMinutes(mins: number, volumeScale = 1): number {
   return Math.max(4, Math.min(10, Math.round(n * volumeScale)));
 }
 
-const MUSCLE_FILL: Record<string, string[]> = {
-  legs: ["posterior", "core"],
-  posterior: ["legs", "core"],
-  chest: ["shoulders", "arms"],
-  back: ["arms", "posterior"],
-  shoulders: ["arms", "chest"],
-  arms: ["shoulders", "back"],
-  core: ["full"],
-  full: ["chest", "back", "legs"],
-  cardio: ["core"],
-};
-
 function adjustRepsForBias(
   reps: string,
   bias: "strength" | "hypertrophy" | "endurance",
@@ -105,38 +96,24 @@ function adjustRepsForBias(
   return reps;
 }
 
-function venueEquipment(profile: Profile): {
-  prefer: string[];
-  bodyweightOnly: boolean;
-} {
-  const life = profile.life;
-  const venue = life?.venue || "gym";
-  const tags = life?.equipmentTags || [];
-  if (venue === "hotel_travel" || venue === "home") {
-    if (tags.includes("dumbbell"))
-      return { prefer: ["dumbbell", "bodyweight", "band"], bodyweightOnly: false };
-    if (tags.includes("band"))
-      return { prefer: ["band", "bodyweight"], bodyweightOnly: false };
-    return { prefer: ["bodyweight"], bodyweightOnly: true };
-  }
-  if (venue === "outdoor")
-    return { prefer: ["bodyweight", "band"], bodyweightOnly: false };
-  if (tags.length) return { prefer: tags, bodyweightOnly: false };
-  const eq = (profile.availableEquipment || "").toLowerCase();
-  if (eq.includes("body") || eq.includes("nhà"))
-    return { prefer: ["bodyweight", "dumbbell", "band"], bodyweightOnly: false };
-  return {
-    prefer: ["dumbbell", "barbell", "machine", "bodyweight", "any"],
-    bodyweightOnly: false,
-  };
-}
-
 function resolveStyle(profile: Profile): TrainingStyle {
   return profile.trainingStyle || "balanced";
 }
 
 function toSet(
-  p: ReturnType<typeof pickByMuscle>[0],
+  p: {
+    id: string;
+    name: string;
+    muscle: string;
+    category?: string;
+    cues: string[];
+    avoidJoints?: string[];
+    imageUrl: string;
+    gifUrl?: string;
+    primaryMuscles?: string[];
+    secondaryMuscles?: string[];
+    equipment: string;
+  },
   rx: ReturnType<typeof stylePrescription>,
   jointSafe: boolean,
   sessionBlock?: 1 | 2,
@@ -186,7 +163,7 @@ export function generatePlan(
 
   const sessionsPerDay = Math.min(2, Math.max(1, profile.sessionsPerDay || 1));
   const sessionMinutes = effectiveSessionMinutes(profile);
-  const { prefer, bodyweightOnly } = venueEquipment(profile);
+  const equipment = resolveEquipmentProfile(profile);
 
   const bmr = bmrMifflin(
     metrics.weightKg,
@@ -256,8 +233,7 @@ export function generatePlan(
     travelDayIdx = trainIndices[trainIndices.length - 1];
   }
 
-  const styleRank = (e: { name: string; equipment: string }) =>
-    rankForStyle(e.name, e.equipment, style);
+  const weekUsed = new Set<string>();
 
   const workoutDays: WorkoutDay[] = DAY_NAMES.map((dayName, dayIndex) => {
     const tIdx = trainIndices.indexOf(dayIndex);
@@ -279,6 +255,7 @@ export function generatePlan(
             gifUrl: "https://static.exercisedb.dev/media/01qpYSe.gif",
             muscle: "cardio",
             primaryMuscles: ["cardiovascular system"],
+            equipment: "bodyweight",
           },
         ],
         isRest: true,
@@ -295,9 +272,30 @@ export function generatePlan(
           ? "Để RIR 1–3"
           : undefined;
 
+    const selectCtx: SelectContext = {
+      style,
+      goal: profile.goal,
+      band,
+      jointSafe,
+      lowImpact: lowImpact || isTravel,
+      avoidJoints: jointZones,
+      equipment: isTravel
+        ? {
+            ...equipment,
+            venue: "hotel_travel",
+            allowed: ["bodyweight", "band", "dumbbell"],
+            preferred: ["bodyweight", "band"],
+            strict: true,
+            summary: "Ngày travel · bodyweight / band",
+          }
+        : equipment,
+      physicalJob: !!profile.life?.physicalJob,
+      travelMode: isTravel,
+    };
+
     for (const block of blocks) {
       const muscles = block === 2 ? [...t.muscles].reverse() : t.muscles;
-      let muscleList = muscles;
+      let muscleList = [...muscles];
       if (profile.life?.physicalJob) {
         muscleList = muscles.filter((m) => m !== "legs" && m !== "posterior");
         if (!muscleList.length) muscleList = ["chest", "back", "core"];
@@ -307,59 +305,27 @@ export function generatePlan(
           ? Math.max(4, Math.ceil(perSessionCount * 0.55))
           : perSessionCount;
 
-      const pickOpts = {
-        jointSafe,
-        lowImpact: lowImpact || isTravel,
-        avoidJoints: jointZones,
-        equipmentPrefer: prefer,
-        bodyweightOnly: bodyweightOnly || isTravel,
-        styleRank,
-      };
-
-      const addFromMuscle = (muscle: string, want: number) => {
-        const picks = pickByMuscle(
-          muscle,
-          pickOpts,
-          muscle === "cardio" || muscle === "core" ? Math.min(2, want) : want,
-        );
-        for (const p of picks) {
-          if (exercises.filter((e) => e.sessionBlock === block).length >= target)
-            break;
-          if (exercises.some((e) => e.id === p.id)) continue;
-          const isCardio = p.muscle === "cardio" || p.category === "cardio";
-          const localRx = {
-            ...rx,
-            reps: isCardio
-              ? "15–25 phút"
-              : adjustRepsForBias(rx.reps, cap.repBias, false),
-          };
-          exercises.push(toSet(p, localRx, jointSafe, block, failCue));
-        }
-      };
-
-      for (const muscle of muscleList) {
-        if (exercises.filter((e) => e.sessionBlock === block).length >= target)
-          break;
-        const want = muscle === "cardio" || muscle === "core" ? 1 : 3;
-        addFromMuscle(muscle, want);
-      }
-
-      // Đủ volume: bổ sung nhóm phụ nếu còn thiếu bài
-      if (exercises.filter((e) => e.sessionBlock === block).length < target) {
-        for (const muscle of muscleList) {
-          for (const fill of MUSCLE_FILL[muscle] || ["core"]) {
-            if (
-              exercises.filter((e) => e.sessionBlock === block).length >= target
-            )
-              break;
-            addFromMuscle(fill, 2);
-          }
-        }
+      const picks = buildSessionPicks(
+        muscleList,
+        target,
+        selectCtx,
+        weekUsed,
+      );
+      for (const p of picks) {
+        const isCardio = p.muscle === "cardio" || p.category === "cardio";
+        const localRx = {
+          ...rx,
+          reps: isCardio
+            ? "15–25 phút"
+            : adjustRepsForBias(rx.reps, cap.repBias, false),
+        };
+        exercises.push(toSet(p, localRx, jointSafe, block, failCue));
       }
     }
 
     const focusLabel = [
       isTravel ? "Travel / BW" : t.focus,
+      equipment.venue !== "gym" ? equipment.venue : null,
       sessionsPerDay >= 2 ? `${sessionsPerDay} buổi` : null,
       `~${sessionMinutes}p`,
     ]
@@ -392,6 +358,7 @@ export function generatePlan(
     guide.note,
     rx.note,
     cap.note,
+    `Thiết bị: ${equipment.summary}.`,
     `Phong cách: ${styleLabel}.`,
     `Mục tiêu: ${goalLabel}${profile.goalNote ? ` — ${profile.goalNote}` : ""}.`,
     `Lịch: tập ${trainPattern} (${daysPerWeek} ngày) · nghỉ ${restDays} ngày xen đều · ${sessionsPerDay}×${sessionMinutes}p (~${weeklyMinutes}p/tuần).`,
@@ -405,7 +372,7 @@ export function generatePlan(
     id: uid(),
     version: previousVersion + 1,
     createdAt: new Date().toISOString(),
-    rationale: `${styleLabel} · BMI ${bmiVal} · ${goalLabel} · ${daysPerWeek}n · ${sessionsPerDay}×${sessionMinutes}p`,
+    rationale: `${styleLabel} · ${equipment.venue} · BMI ${bmiVal} · ${goalLabel} · ${daysPerWeek}n · ${sessionsPerDay}×${sessionMinutes}p`,
     ageBand: band,
     schedule: {
       goal: profile.goal,

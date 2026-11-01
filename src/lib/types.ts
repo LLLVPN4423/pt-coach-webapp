@@ -284,7 +284,7 @@ export interface AppState {
 /** Bump when media/context schema needs regen banner */
 export const SCHEMA_VERSION = 3;
 /** Bump when plan generation logic needs user regen (BMI volume, RX, …) */
-export const MEDIA_VERSION = 4;
+export const MEDIA_VERSION = 5;
 export const STORAGE_KEY = "pt-desk:v3";
 
 export const CONDITION_LABELS: Record<MedicalCondition, string> = {

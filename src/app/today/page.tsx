@@ -20,6 +20,7 @@ import {
   estimateCycleDay,
   shouldDeloadToday,
 } from "@/lib/context";
+import { resolveEquipmentProfile } from "@/lib/exercise-select";
 import {
   exerciseLogKey,
   getExerciseProgress,
@@ -75,6 +76,8 @@ export default function TodayPage() {
     (profile.medical?.conditions ?? []).includes("herniated_disc") ||
     (profile.medical?.conditions ?? []).includes("pregnancy") ||
     !!profile.medical?.hasRedFlags;
+  const eqProfile = resolveEquipmentProfile(profile);
+  const allowedEquipment = eqProfile.strict ? eqProfile.allowed : undefined;
 
   const water = todayLog?.waterGlasses ?? 0;
   const waterGoal = Math.round(plan.nutrition.waterL * 4);
@@ -154,7 +157,7 @@ export default function TodayPage() {
 
       {needsRegen && (
         <div className="banner-warn px-3 py-2 text-sm">
-          Plan cần cập nhật (volume theo BMI, RX hiệp/nghỉ) —{" "}
+          Plan cần cập nhật (chọn bài theo nơi tập/thiết bị + BMI) —{" "}
           <button
             type="button"
             className="font-semibold text-[var(--accent)] underline"
@@ -162,7 +165,7 @@ export default function TodayPage() {
           >
             Sinh lại plan
           </button>{" "}
-          để có số hiệp/rep/nghỉ phù hợp thể trạng.
+          để lịch khớp thiết bị và thể trạng.
         </div>
       )}
 
@@ -412,6 +415,7 @@ export default function TodayPage() {
                 avoidJoints={avoidJoints}
                 lowImpact={lowImpact}
                 deload={deload}
+                allowedEquipment={allowedEquipment}
                 setsDone={prog.setsDone}
                 onToggleSet={(i) => toggleExerciseSet(ex, i)}
               />

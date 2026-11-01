@@ -22,6 +22,7 @@ export function ExerciseCard({
   avoidJoints,
   lowImpact,
   deload,
+  allowedEquipment,
   setsDone,
   onToggleSet,
 }: {
@@ -32,6 +33,8 @@ export function ExerciseCard({
   avoidJoints?: string[];
   lowImpact?: boolean;
   deload?: boolean;
+  /** Thiết bị được phép (nhà / travel) */
+  allowedEquipment?: string[];
   /** Tiến độ từng hiệp (Hôm nay) */
   setsDone?: boolean[];
   onToggleSet?: (setIndex: number) => void;
@@ -54,10 +57,14 @@ export function ExerciseCard({
     if (!tpl) return [];
     return alternativesFor(
       tpl,
-      { avoidJoints, lowImpact: lowImpact || deload },
+      {
+        avoidJoints,
+        lowImpact: lowImpact || deload,
+        allowedEquipment,
+      },
       5,
     );
-  }, [tpl, avoidJoints, lowImpact, deload]);
+  }, [tpl, avoidJoints, lowImpact, deload, allowedEquipment]);
 
   const canSwap =
     typeof dayIndex === "number" && typeof onSwap === "function" && alts.length > 0;

@@ -65,7 +65,13 @@ export function searchExercises(
 
 export function alternativesFor(
   ex: ExerciseTemplate,
-  opts: { avoidJoints?: string[]; lowImpact?: boolean; equipment?: string },
+  opts: {
+    avoidJoints?: string[];
+    lowImpact?: boolean;
+    equipment?: string;
+    /** Hard allow-list (home / travel) */
+    allowedEquipment?: string[];
+  },
   limit = 6,
 ): ExerciseTemplate[] {
   return EXERCISES.filter((e) => {
@@ -77,7 +83,13 @@ export function alternativesFor(
       e.avoidJoints?.some((j) => opts.avoidJoints!.includes(j))
     )
       return false;
-    if (opts.equipment && opts.equipment !== "any") {
+    if (opts.allowedEquipment?.length) {
+      if (
+        e.equipment !== "any" &&
+        !opts.allowedEquipment.includes(e.equipment)
+      )
+        return false;
+    } else if (opts.equipment && opts.equipment !== "any") {
       if (e.equipment !== opts.equipment && e.equipment !== "bodyweight")
         return false;
     }

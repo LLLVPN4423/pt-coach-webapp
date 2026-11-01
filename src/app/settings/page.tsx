@@ -4,7 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { IconDownload, IconTrash, IconUpload } from "@/components/icons";
 import { usePtStore } from "@/hooks/usePtStore";
-import type { TrainingStyle } from "@/lib/types";
+import { VENUE_LABELS } from "@/lib/context";
+import {
+  EQUIPMENT_TAG_OPTIONS,
+  type EqKind,
+} from "@/lib/exercise-select";
+import type { LifeContext, TrainingStyle } from "@/lib/types";
 import {
   TRAINING_STYLE_BLURBS,
   TRAINING_STYLE_LABELS,
@@ -111,6 +116,68 @@ export default function SettingsPage() {
                   ]
                 }
               </p>
+            </div>
+            <div className="field sm:col-span-2">
+              <label>Nơi tập</label>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(VENUE_LABELS) as LifeContext["venue"][]).map(
+                  (id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
+                        (profile.life?.venue || "gym") === id
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          : "border-[var(--line)] bg-[var(--elevated)]"
+                      }`}
+                      onClick={() =>
+                        setProfile({
+                          ...profile,
+                          life: { ...profile.life, venue: id },
+                          updatedAt: new Date().toISOString(),
+                        })
+                      }
+                    >
+                      {VENUE_LABELS[id]}
+                    </button>
+                  ),
+                )}
+              </div>
+            </div>
+            <div className="field sm:col-span-2">
+              <label>Thiết bị có sẵn</label>
+              <div className="flex flex-wrap gap-2">
+                {EQUIPMENT_TAG_OPTIONS.map((opt) => {
+                  const tags = profile.life?.equipmentTags || [];
+                  const on = tags.includes(opt.id);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`rounded-full border px-2.5 py-1 text-xs ${
+                        on
+                          ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                          : "border-[var(--line)] bg-[var(--elevated)]"
+                      }`}
+                      onClick={() => {
+                        const next = on
+                          ? tags.filter((t) => t !== opt.id)
+                          : [...tags, opt.id];
+                        setProfile({
+                          ...profile,
+                          life: {
+                            ...profile.life,
+                            equipmentTags: next as EqKind[],
+                          },
+                          updatedAt: new Date().toISOString(),
+                        });
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div className="field">
               <label>Ngày / tuần</label>

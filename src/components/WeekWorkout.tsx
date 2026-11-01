@@ -24,12 +24,14 @@ export function WeekWorkout({
   onSwap,
   avoidJoints,
   lowImpact,
+  allowedEquipment,
 }: {
   days: WorkoutDay[];
   todayIdx: number;
   onSwap: (dayIndex: number, oldId: string, next: ExerciseSet) => void;
   avoidJoints?: string[];
   lowImpact?: boolean;
+  allowedEquipment?: string[];
 }) {
   const [dayIdx, setDayIdx] = useState(todayIdx);
   const day = days[dayIdx] ?? days[0];
@@ -140,6 +142,7 @@ export function WeekWorkout({
                       onSwap={onSwap}
                       avoidJoints={avoidJoints}
                       lowImpact={lowImpact}
+                      allowedEquipment={allowedEquipment}
                     />
                   ))}
                 </div>

@@ -9,6 +9,7 @@ import { PageGate } from "@/components/PageGate";
 import { WeekWorkout } from "@/components/WeekWorkout";
 import { usePtStore } from "@/hooks/usePtStore";
 import { weekdayIndex } from "@/lib/calc";
+import { resolveEquipmentProfile } from "@/lib/exercise-select";
 import { planNeedsRegen } from "@/lib/storage";
 import { GOAL_LABELS } from "@/lib/types";
 import { TRAINING_STYLE_LABELS } from "@/lib/training-styles";
@@ -32,6 +33,8 @@ export default function PlanPage() {
     (profile.medical?.conditions ?? []).includes("herniated_disc") ||
     (profile.medical?.conditions ?? []).includes("pregnancy") ||
     !!profile.medical?.hasRedFlags;
+  const eqProfile = resolveEquipmentProfile(profile);
+  const allowedEquipment = eqProfile.strict ? eqProfile.allowed : undefined;
 
   const sch = plan.schedule;
   const goalLabel = GOAL_LABELS[sch?.goal ?? profile.goal] ?? profile.goal;
@@ -103,7 +106,7 @@ export default function PlanPage() {
 
       {planNeedsRegen(plan) && (
         <p className="banner-warn px-3 py-2 text-xs">
-          Plan cũ — cần volume theo BMI + RX hiệp/nghỉ —{" "}
+          Plan cũ — cần chọn bài theo nơi tập/thiết bị + BMI —{" "}
           <button
             type="button"
             className="font-semibold text-[var(--accent)] underline"
@@ -166,6 +169,7 @@ export default function PlanPage() {
         onSwap={swapExercise}
         avoidJoints={avoidJoints}
         lowImpact={lowImpact}
+        allowedEquipment={allowedEquipment}
       />
     </div>
   );
