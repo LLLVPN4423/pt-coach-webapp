@@ -224,12 +224,26 @@ export interface TrainingPlan {
   medicalSummary: string[];
 }
 
+/** Tiến độ từng bài: tick từng hiệp */
+export interface ExerciseLogProgress {
+  /** true = đã xong hiệp đó (index 0 = hiệp 1) */
+  setsDone: boolean[];
+}
+
 export interface DayLog {
   date: string;
   workoutDone?: boolean;
   /** Did a lighter/deload version */
   workoutAdjusted?: boolean;
   nutritionOnTrack?: boolean;
+  /**
+   * Chi tiết từng bài — key = `${sessionBlock}:${exerciseId}`
+   */
+  exerciseProgress?: Record<string, ExerciseLogProgress>;
+  /**
+   * Chi tiết từng bữa — key = meal.name
+   */
+  mealProgress?: Record<string, boolean>;
   waterGlasses?: number;
   rpe?: number;
   notes?: string;
@@ -269,7 +283,8 @@ export interface AppState {
 
 /** Bump when media/context schema needs regen banner */
 export const SCHEMA_VERSION = 3;
-export const MEDIA_VERSION = 3;
+/** Bump when plan generation logic needs user regen (BMI volume, RX, …) */
+export const MEDIA_VERSION = 4;
 export const STORAGE_KEY = "pt-desk:v3";
 
 export const CONDITION_LABELS: Record<MedicalCondition, string> = {

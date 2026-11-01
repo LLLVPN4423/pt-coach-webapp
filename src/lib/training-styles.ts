@@ -206,12 +206,12 @@ export function stylePrescription(
       };
     case "strength":
       return {
-        sets: base.sets,
-        reps: seniorSoft ? "5–8" : "3–6",
+        sets: Math.min(5, base.sets + (seniorSoft ? 0 : 1)),
+        reps: seniorSoft ? "5–8" : "5–8",
         restSec: 150,
-        note: "Strength: compound nặng, nghỉ dài, form sạch.",
+        note: "Strength: compound nặng, nghỉ dài, form sạch · 5–8 cái/hiệp.",
         preferCompound: true,
-        volumeScale: 0.85,
+        volumeScale: 1,
       };
     case "to_failure":
       return {

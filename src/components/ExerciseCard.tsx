@@ -6,6 +6,14 @@ import { alternativesFor, getExercise } from "@/lib/exercises";
 import { MuscleMap } from "@/components/MuscleMap";
 import { IconDumbbell, IconRefresh } from "@/components/icons";
 
+function formatRest(sec: number): string {
+  if (!sec || sec <= 0) return "—";
+  if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return s ? `${m}p${s}s` : `${m} phút`;
+}
+
 export function ExerciseCard({
   exercise,
   compact,
@@ -14,6 +22,8 @@ export function ExerciseCard({
   avoidJoints,
   lowImpact,
   deload,
+  setsDone,
+  onToggleSet,
 }: {
   exercise: ExerciseSet;
   compact?: boolean;
@@ -22,6 +32,9 @@ export function ExerciseCard({
   avoidJoints?: string[];
   lowImpact?: boolean;
   deload?: boolean;
+  /** Tiến độ từng hiệp (Hôm nay) */
+  setsDone?: boolean[];
+  onToggleSet?: (setIndex: number) => void;
 }) {
   const [imgOk, setImgOk] = useState(true);
   const [openSwap, setOpenSwap] = useState(false);
@@ -33,6 +46,9 @@ export function ExerciseCard({
   const secondary = exercise.secondaryMuscles ?? tpl?.secondaryMuscles ?? [];
   const gif = exercise.gifUrl || exercise.imageUrl || tpl?.gifUrl || tpl?.imageUrl;
   const sets = deload ? Math.max(1, exercise.sets - 1) : exercise.sets;
+  const restSec = exercise.restSec ?? 0;
+  const trackable = typeof onToggleSet === "function";
+  const doneCount = setsDone?.filter(Boolean).length ?? 0;
 
   const alts = useMemo(() => {
     if (!tpl) return [];
@@ -49,7 +65,11 @@ export function ExerciseCard({
   const showDetail = !compact || openDetail;
 
   return (
-    <article className={`exercise-card ${compact ? "exercise-card--compact" : ""}`}>
+    <article
+      className={`exercise-card ${compact ? "exercise-card--compact" : ""} ${
+        trackable && doneCount === sets ? "ring-1 ring-[var(--accent)]" : ""
+      }`}
+    >
       <div className="flex gap-3">
         <button
           type="button"
@@ -98,14 +118,30 @@ export function ExerciseCard({
                 {exercise.name}
               </h3>
             </div>
-            <p className="shrink-0 rounded-lg bg-[var(--sand)] px-2 py-1 text-sm font-semibold tabular-nums">
-              {sets}×{exercise.reps}
-              {deload ? (
-                <span className="ml-1 text-[10px] font-bold text-[var(--warn)]">
-                  nhẹ
-                </span>
-              ) : null}
-            </p>
+            <div className="shrink-0 rounded-xl bg-[var(--sand)] px-2.5 py-1.5 text-right">
+              <p className="font-display text-sm font-bold tabular-nums leading-tight">
+                {sets} hiệp
+                {deload ? (
+                  <span className="ml-1 text-[10px] font-bold text-[var(--warn)]">
+                    nhẹ
+                  </span>
+                ) : null}
+              </p>
+              <p className="text-[11px] font-semibold tabular-nums text-[var(--text)]">
+                {/phút|min/i.test(exercise.reps)
+                  ? exercise.reps
+                  : `${exercise.reps} cái/hiệp`}
+              </p>
+              {restSec > 0 ? (
+                <p className="text-[10px] font-medium text-[var(--muted)]">
+                  Nghỉ {formatRest(restSec)} giữa hiệp
+                </p>
+              ) : (
+                <p className="text-[10px] font-medium text-[var(--muted)]">
+                  Cardio / liên tục
+                </p>
+              )}
+            </div>
           </div>
 
           {compact && !openDetail && primary.length > 0 && (
@@ -142,6 +178,34 @@ export function ExerciseCard({
 
           {exercise.notes && (
             <p className="mt-1 text-xs text-[var(--warn)]">{exercise.notes}</p>
+          )}
+
+          {trackable && (
+            <div className="mt-2.5">
+              <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--muted)]">
+                Tick từng hiệp · {doneCount}/{sets}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: sets }).map((_, i) => {
+                  const on = !!setsDone?.[i];
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => onToggleSet?.(i)}
+                      className={`min-w-[2.5rem] rounded-lg border px-2 py-1.5 text-xs font-bold tabular-nums ${
+                        on
+                          ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]"
+                          : "border-[var(--line)] bg-[var(--surface)] text-[var(--muted)]"
+                      }`}
+                      aria-pressed={on}
+                    >
+                      H{i + 1}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           <div className="mt-2 flex flex-wrap gap-3">
@@ -200,6 +264,9 @@ export function ExerciseCard({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={gif} alt={exercise.name} className="w-full object-contain" />
             <p className="mt-2 text-center text-sm font-semibold">{exercise.name}</p>
+            <p className="text-center text-xs text-[var(--muted)]">
+              {sets} hiệp · {exercise.reps} cái · nghỉ {formatRest(restSec)}
+            </p>
             <div className="mt-2">
               <MuscleMap primary={primary} secondary={secondary} />
             </div>

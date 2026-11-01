@@ -103,7 +103,7 @@ export default function PlanPage() {
 
       {planNeedsRegen(plan) && (
         <p className="banner-warn px-3 py-2 text-xs">
-          Plan chưa có 3D GIF / hoàn cảnh mới —{" "}
+          Plan cũ — cần volume theo BMI + RX hiệp/nghỉ —{" "}
           <button
             type="button"
             className="font-semibold text-[var(--accent)] underline"

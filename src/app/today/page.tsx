@@ -20,8 +20,16 @@ import {
   estimateCycleDay,
   shouldDeloadToday,
 } from "@/lib/context";
+import {
+  exerciseLogKey,
+  getExerciseProgress,
+  mealCompletion,
+  toggleSetInProgress,
+  workoutCompletion,
+} from "@/lib/log-progress";
 import { planNeedsRegen } from "@/lib/storage";
 import { weekWorkoutCount, weeklyScore } from "@/lib/progress";
+import type { ExerciseSet } from "@/lib/types";
 
 export default function TodayPage() {
   const router = useRouter();
@@ -73,6 +81,8 @@ export default function TodayPage() {
   const needsRegen = planNeedsRegen(plan);
   const score = weeklyScore(logs, plan);
   const weekDone = weekWorkoutCount(logs);
+  const wc = workoutCompletion(day.exercises, todayLog, deload);
+  const mc = mealCompletion(plan.nutrition.meals, todayLog);
   const cycleDay =
     profile.sex === "female" && profile.femaleCycle?.cycleTrackingEnabled
       ? estimateCycleDay(
@@ -93,6 +103,41 @@ export default function TodayPage() {
     updateLog({ symptoms: next });
   }
 
+  function setCountFor(ex: ExerciseSet) {
+    return deload ? Math.max(1, ex.sets - 1) : ex.sets;
+  }
+
+  function toggleExerciseSet(ex: ExerciseSet, setIndex: number) {
+    const n = setCountFor(ex);
+    const key = exerciseLogKey(ex);
+    const cur = getExerciseProgress(todayLog, ex, n);
+    const nextProg = toggleSetInProgress(cur, setIndex);
+    const exerciseProgress = {
+      ...(todayLog?.exerciseProgress || {}),
+      [key]: nextProg,
+    };
+    const probe = { ...todayLog, exerciseProgress, date: todayLog?.date || "" };
+    const nextWc = workoutCompletion(day!.exercises, probe, deload);
+    updateLog({
+      exerciseProgress,
+      workoutDone: !deload && nextWc.allDone,
+      workoutAdjusted: deload && nextWc.allDone,
+    });
+  }
+
+  function toggleMeal(name: string) {
+    const mealProgress = {
+      ...(todayLog?.mealProgress || {}),
+      [name]: !todayLog?.mealProgress?.[name],
+    };
+    const probe = { ...todayLog, mealProgress, date: todayLog?.date || "" };
+    const nextMc = mealCompletion(plan!.nutrition.meals, probe);
+    updateLog({
+      mealProgress,
+      nutritionOnTrack: nextMc.allDone,
+    });
+  }
+
   return (
     <div className="space-y-6 rise">
       <div>
@@ -109,7 +154,7 @@ export default function TodayPage() {
 
       {needsRegen && (
         <div className="banner-warn px-3 py-2 text-sm">
-          Catalog 3D GIF mới —{" "}
+          Plan cần cập nhật (volume theo BMI, RX hiệp/nghỉ) —{" "}
           <button
             type="button"
             className="font-semibold text-[var(--accent)] underline"
@@ -117,7 +162,7 @@ export default function TodayPage() {
           >
             Sinh lại plan
           </button>{" "}
-          để có animation + hoàn cảnh.
+          để có số hiệp/rep/nghỉ phù hợp thể trạng.
         </div>
       )}
 
@@ -302,22 +347,47 @@ export default function TodayPage() {
             <p className="chip">{day.isRest ? "Nghỉ / nhẹ" : "Tập"}</p>
             <h2 className="section-title mt-2 text-xl">{day.dayName}</h2>
             <p className="text-[var(--muted)]">{day.focus}</p>
+            {!day.isRest && (
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Tiến độ{" "}
+                <span className="font-semibold text-[var(--text)]">
+                  {wc.setsDone}/{wc.setsTotal}
+                </span>{" "}
+                hiệp · {wc.done}/{wc.total} bài
+              </p>
+            )}
           </div>
           <button
             type="button"
             className={`btn ${todayLog?.workoutDone || todayLog?.workoutAdjusted ? "btn-primary" : "btn-ghost"}`}
             onClick={() => {
-              if (deload) {
+              const markOn = !(
+                todayLog?.workoutDone || todayLog?.workoutAdjusted
+              );
+              if (!markOn) {
                 updateLog({
-                  workoutAdjusted: !todayLog?.workoutAdjusted,
                   workoutDone: false,
-                });
-              } else {
-                updateLog({
-                  workoutDone: !todayLog?.workoutDone,
                   workoutAdjusted: false,
+                  exerciseProgress: {},
                 });
+                return;
               }
+              // Đánh dấu nhanh: tick hết mọi hiệp
+              const exerciseProgress: Record<
+                string,
+                { setsDone: boolean[] }
+              > = {};
+              for (const ex of day.exercises) {
+                const n = setCountFor(ex);
+                exerciseProgress[exerciseLogKey(ex)] = {
+                  setsDone: Array.from({ length: n }, () => true),
+                };
+              }
+              updateLog({
+                exerciseProgress,
+                workoutDone: !deload,
+                workoutAdjusted: !!deload,
+              });
             }}
           >
             <IconCheck size={16} />
@@ -325,24 +395,28 @@ export default function TodayPage() {
               ? "Đã tập"
               : todayLog?.workoutAdjusted
                 ? "Đã làm bản nhẹ"
-                : deload
-                  ? "Xong bản nhẹ"
-                  : "Đánh dấu xong"}
+                : "Tick hết"}
           </button>
         </div>
         <div className="space-y-2">
-          {day.exercises.map((ex) => (
-            <ExerciseCard
-              key={ex.id + ex.name}
-              exercise={ex}
-              compact
-              dayIndex={day.dayIndex}
-              onSwap={swapExercise}
-              avoidJoints={avoidJoints}
-              lowImpact={lowImpact}
-              deload={deload}
-            />
-          ))}
+          {day.exercises.map((ex) => {
+            const n = setCountFor(ex);
+            const prog = getExerciseProgress(todayLog, ex, n);
+            return (
+              <ExerciseCard
+                key={`${ex.sessionBlock ?? 1}-${ex.id}-${ex.name}`}
+                exercise={ex}
+                compact
+                dayIndex={day.dayIndex}
+                onSwap={swapExercise}
+                avoidJoints={avoidJoints}
+                lowImpact={lowImpact}
+                deload={deload}
+                setsDone={prog.setsDone}
+                onToggleSet={(i) => toggleExerciseSet(ex, i)}
+              />
+            );
+          })}
         </div>
         <div className="flex flex-wrap gap-3">
           <Link
@@ -366,43 +440,91 @@ export default function TodayPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        <div className="card space-y-3">
-          <div className="flex items-center gap-2 font-semibold">
-            <IconUtensils size={18} className="text-[var(--accent)]" />
-            Dinh dưỡng
+      <section className="card space-y-3">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2 font-semibold">
+              <IconUtensils size={18} className="text-[var(--accent)]" />
+              Dinh dưỡng hôm nay
+            </div>
+            <p className="mt-1 font-display text-2xl font-semibold tabular-nums">
+              {plan.nutrition.dailyCalories}{" "}
+              <span className="text-base font-normal tracking-normal text-[var(--muted)]">
+                kcal
+              </span>
+            </p>
+            <p className="text-xs text-[var(--muted)]">
+              P {plan.nutrition.proteinG}g · C {plan.nutrition.carbsG}g · F{" "}
+              {plan.nutrition.fatG}g · tick từng bữa
+            </p>
           </div>
-          <p className="font-display text-2xl font-semibold tabular-nums">
-            {plan.nutrition.dailyCalories}{" "}
-            <span className="text-base font-normal tracking-normal text-[var(--muted)]">
-              kcal
-            </span>
+          <p className="chip">
+            {mc.done}/{mc.total} bữa
           </p>
-          <button
-            type="button"
-            className={`btn w-full ${todayLog?.nutritionOnTrack ? "btn-primary" : "btn-ghost"}`}
-            onClick={() =>
-              updateLog({ nutritionOnTrack: !todayLog?.nutritionOnTrack })
-            }
-          >
-            {todayLog?.nutritionOnTrack ? "Đã ăn theo plan" : "Đánh dấu ăn đúng"}
-          </button>
         </div>
-        <div className="card space-y-3">
-          <div className="flex items-center gap-2 font-semibold">
-            <IconDroplets size={18} className="text-[var(--accent)]" />
-            Nước · ~{plan.nutrition.waterL}L
+        <div className="space-y-2">
+          {plan.nutrition.meals.map((meal) => {
+            const on = !!todayLog?.mealProgress?.[meal.name];
+            return (
+              <button
+                key={meal.name}
+                type="button"
+                onClick={() => toggleMeal(meal.name)}
+                className={`flex w-full items-start gap-3 rounded-xl border px-3 py-2.5 text-left transition ${
+                  on
+                    ? "border-[var(--accent)] bg-[var(--accent-soft)]"
+                    : "border-[var(--line)] bg-[var(--elevated)]"
+                }`}
+              >
+                <span className="text-xl" aria-hidden>
+                  {meal.emoji}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-display font-semibold">
+                      {meal.name}
+                    </span>
+                    {meal.approxKcal != null && (
+                      <span className="text-xs font-semibold tabular-nums text-[var(--muted)]">
+                        ~{meal.approxKcal} kcal
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                    {meal.items.slice(0, 2).join(" · ")}
+                    {meal.items.length > 2 ? "…" : ""}
+                  </span>
+                </span>
+                <span
+                  className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                    on
+                      ? "border-[var(--accent)] bg-[var(--accent)] text-[var(--accent-ink)]"
+                      : "border-[var(--line)] text-[var(--muted)]"
+                  }`}
+                >
+                  {on ? "✓" : ""}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
+          <div>
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <IconDroplets size={16} className="text-[var(--accent)]" />
+              Nước · ~{plan.nutrition.waterL}L
+            </div>
+            <p className="font-display text-xl font-semibold tabular-nums">
+              {water}{" "}
+              <span className="text-sm font-normal text-[var(--muted)]">
+                / {waterGoal} ly
+              </span>
+            </p>
           </div>
-          <p className="font-display text-2xl font-semibold tabular-nums">
-            {water}{" "}
-            <span className="text-base font-normal tracking-normal text-[var(--muted)]">
-              / {waterGoal} ly
-            </span>
-          </p>
           <div className="flex gap-2">
             <button
               type="button"
-              className="btn btn-ghost flex-1"
+              className="btn btn-ghost"
               onClick={() =>
                 updateLog({ waterGlasses: Math.max(0, water - 1) })
               }
@@ -411,7 +533,7 @@ export default function TodayPage() {
             </button>
             <button
               type="button"
-              className="btn btn-primary flex-1"
+              className="btn btn-primary"
               onClick={() => updateLog({ waterGlasses: water + 1 })}
             >
               +1 ly

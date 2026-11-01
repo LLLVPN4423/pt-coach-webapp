@@ -133,7 +133,16 @@ export function pickByMuscle(
     );
   }
   if (pool.length < count) {
-    pool = EXERCISES.filter((e) => e.jointFriendly && e.lowImpact);
+    // Nới filter trong cùng nhóm cơ — không nhảy sang bài ngẫu nhiên toàn catalog
+    const sameMuscle = EXERCISES.filter(
+      (e) =>
+        e.muscle === muscle ||
+        (muscle === "full" && e.muscle !== "cardio") ||
+        (muscle === "core" &&
+          (e.muscle === "core" ||
+            e.primaryMuscles?.some((m) => /abdom/i.test(m)))),
+    );
+    pool = sameMuscle.length ? sameMuscle : pool;
   }
   const start = muscle.length % Math.max(pool.length, 1);
   let rotated = [...pool.slice(start), ...pool.slice(0, start)];

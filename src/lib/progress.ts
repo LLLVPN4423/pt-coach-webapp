@@ -80,6 +80,11 @@ export function weeklyScore(
       done++;
     }
     if (l?.nutritionOnTrack) nutrPts += 1;
+    else if (l?.mealProgress) {
+      const vals = Object.values(l.mealProgress);
+      if (vals.length && vals.filter(Boolean).length / vals.length >= 0.7)
+        nutrPts += 0.7;
+    }
     if ((l?.waterGlasses ?? 0) >= waterGoal * 0.7) waterPts += 1;
   }
   const w = Math.min(1, done / Math.max(1, target)) * 50;
