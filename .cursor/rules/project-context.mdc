@@ -1,0 +1,22 @@
+---
+description: Read/update CONTEXT.md so agents avoid full-repo scans
+alwaysApply: true
+---
+
+# Project context (token-saving)
+
+Before exploring or editing this repo:
+
+1. **Read `CONTEXT.md` at the repo root first** — product map, stack, key paths, versions, conventions.
+2. Open **only** files needed for the current task. Do **not** bulk-read `src/data/*.json` or the whole `src/` tree unless the task truly requires it.
+3. Prefer paths listed in `CONTEXT.md` (plan-generator, exercise-select, types, storage, today/plan UI).
+
+After finishing a meaningful change (feature, fix, refactor, version bump):
+
+1. **Append** a short entry at the **top** of the Changelog section in `CONTEXT.md` (newest first).
+2. Include: date, 1–3 bullets of *what/why*, and main files/modules touched.
+3. If plan/media logic changed, note whether `MEDIA_VERSION` was bumped.
+
+Skip changelog noise for pure typos or formatting-only edits with no behavior change.
+
+Keep answers and edits aligned with: FE-only Next.js + localStorage, Vietnamese UI, existing dark athletic design tokens.

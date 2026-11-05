@@ -5,6 +5,11 @@ Công cụ **cá nhân** theo dõi sức khỏe / gym và thiết kế **lộ tr
 Repo: https://github.com/LLLVPN4423/pt-coach-webapp  
 Stack: **Next.js + localStorage** (host frontend Vercel là đủ).
 
+## Agent / AI context
+
+- **`CONTEXT.md`** — bản đồ dự án + changelog (đọc trước khi sửa; cập nhật sau mỗi thay đổi lớn).
+- **`.cursor/rules/project-context.mdc`** — rule Cursor bắt agent đọc/ghi `CONTEXT.md` để tiết kiệm token.
+
 ## Phase hiện có
 
 - Onboarding + **ràng buộc y tế rõ** (bệnh nền, khớp, cờ đỏ, disclaimer, clearance)
